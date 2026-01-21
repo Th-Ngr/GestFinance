@@ -150,40 +150,74 @@ function clearForm() {
   ajudante.value = "";
   tipo.value = "entrada";
 }
-// Exporta PDF mensal
-function exportPDF() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
+// ENTRADAS
+doc.setFont("helvetica", "bold");
+doc.text("ENTRADAS", 15, y);
+y += 6;
 
-  let entradas = document.getElementById("entradaBody").innerText;
-  let saidas = document.getElementById("saidaBody").innerText;
-  let totalEntrada = document.getElementById("totalEntrada").innerText;
-  let totalSaida = document.getElementById("totalSaida").innerText;
-  let lucro = document.getElementById("lucro").innerText;
+doc.setFontSize(9);
+doc.text("Data", 15, y);
+doc.text("Cliente", 35, y);
+doc.text("Descrição", 75, y);
+doc.text("Valor", 140, y);
+doc.text("Pagamento", 165, y);
+y += 4;
+doc.line(15, y, 195, y);
+y += 4;
 
-  doc.setFontSize(16);
-  doc.text("Resumo Mensal", 10, 10);
+doc.setFont("helvetica", "normal");
 
-  doc.setFontSize(12);
-  doc.text(`Entradas:\n${entradas}`, 10, 20);
-  doc.text(`Saídas:\n${saidas}`, 10, 60);
-  doc.text(`Faturamento: R$ ${totalEntrada}`, 10, 100);
-  doc.text(`Despesas: R$ ${totalSaida}`, 10, 110);
-  doc.text(`Lucro Líquido: R$ ${lucro}`, 10, 120);
+data.lancamentos
+  .filter(l => l.tipo === "entrada")
+  .forEach(l => {
+    if (y > 270) {
+      doc.addPage();
+      y = 20;
+    }
 
-  doc.save("resumo_mensal.pdf");
-}
+    doc.text(l.data || "-", 15, y);
+    doc.text(l.cliente || "-", 35, y);
+    doc.text(l.descricao || "-", 75, y);
+    doc.text(`R$ ${l.valor.toFixed(2)}`, 140, y);
+    doc.text(l.pagamento, 165, y);
+    y += 5;
+  });
 
-// Exporta PDF anual
-function exportPDFAnual() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
+y += 8;
+doc.line(15, y, 195, y);
+y += 6;
 
-  // Aqui você pode iterar sobre os meses se tiver os dados separados por mês
-  doc.setFontSize(16);
-  doc.text("Resumo Anual", 10, 10);
+// SAÍDAS
+doc.setFont("helvetica", "bold");
+doc.text("SAÍDAS", 15, y);
+y += 6;
 
-  doc.save("resumo_anual.pdf");
-}
+doc.setFontSize(9);
+doc.text("Data", 15, y);
+doc.text("Origem", 35, y);
+doc.text("Descrição", 75, y);
+doc.text("Valor", 140, y);
+doc.text("Pagamento", 165, y);
+y += 4;
+doc.line(15, y, 195, y);
+y += 4;
+
+doc.setFont("helvetica", "normal");
+
+data.lancamentos
+  .filter(l => l.tipo === "saida")
+  .forEach(l => {
+    if (y > 270) {
+      doc.addPage();
+      y = 20;
+    }
+
+    doc.text(l.data || "-", 15, y);
+    doc.text(l.cliente || "-", 35, y);
+    doc.text(l.descricao || "-", 75, y);
+    doc.text(`R$ ${l.valor.toFixed(2)}`, 140, y);
+    doc.text(l.pagamento, 165, y);
+    y += 5;
+  });
 
 
