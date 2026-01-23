@@ -101,6 +101,7 @@ async function carregarLancamentos() {
     snap.forEach(d => {
         const item = { id: d.id, ...d.data() };
         // Substitua a parte da variável 'row' dentro do loop snap.forEach na função carregarLancamentos:
+        const dataFormatadaBR = formatarData(item.data);
 const row = `
     <tr>
         <td>${item.data || "-"}</td>
@@ -438,9 +439,15 @@ function limparFormulario() {
     document.getElementById("ajudante").value = "";
 }
 function formatarData(dataISO) {
-    if(!dataISO) return "";
-    const [ano, mes, dia] = dataISO.split("-");
+    if (!dataISO || dataISO === "") return "-";
+    const partes = dataISO.split("-");
+    
+    // Se a data não tiver 3 partes (ano, mes, dia), retorna ela mesma
+    if (partes.length !== 3) return dataISO;
+    
+    const [ano, mes, dia] = partes;
     return `${dia}-${mes}-${ano}`;
+}
 }
 // Use formatarData(item.data) na hora de criar a linha da tabela
 function abrirEdicao(id) {
