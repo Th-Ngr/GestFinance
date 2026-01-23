@@ -334,3 +334,88 @@ window.pdf = {
         docPDF.save("Resumo_Financeiro_Anual.pdf");
     }
 };
+// Variável global para saber se estamos editando
+let editId = null;
+
+// 1. Função para carregar os dados no formulário
+window.prepararEdicao = async (id) => {
+    try {
+        const docRef = doc(db, "lancamentos", id);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+            const dados = docSnap.data();
+            editId = id; // Armazena o ID que estamos editando
+
+            // Preenche os campos do formulário
+            document.getElementById("data").value = dados.data;
+            document.getElementById("cliente").value = dados.cliente;
+            document.getElementById("descricao").value = dados.descricao;
+            document.getElementById("valor").value = dados.valor;
+            document.getElementById("tipo").value = dados.tipo;
+            document.getElementById("pagamento").value = dados.pagamento;
+            document.getElementById("status").value = dados.status;
+            document.getElementById("ajudante").value = dados.ajudante;
+
+            // Muda o texto do botão para "Atualizar"
+            const btnAdd = document.querySelector(".form button");
+            btnAdd.textContent = "Atualizar Lançamento";
+            btnAdd.style.background = "#f39c12"; // Cor de alerta/edição
+
+            // Rola a página para o topo (formulário)
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    } catch (e) {
+        console.error("Erro ao carregar edição:", e);
+    }
+};
+
+// 2. Modificar a função addLancamento para suportar atualização
+window.addLancamento = async () => {
+    try {
+        if (!auth.currentUser) return alert("Sessão expirada!");
+
+        const dados = {
+            userId: auth.currentUser.uid,
+            mes: monthSelect.value,
+            data: document.getElementById("data").value,
+            cliente: document.getElementById("cliente").value,
+            descricao: document.getElementById("descricao").value,
+            valor: parseFloat(document.getElementById("valor").value) || 0,
+            tipo: document.getElementById("tipo").value,
+            pagamento: document.getElementById("pagamento").value,
+            status: document.getElementById("status").value,
+            ajudante: parseFloat(document.getElementById("ajudante").value) || 0
+        };
+
+        if (editId) {
+            // Se houver editId, estamos ATUALIZANDO
+            await setDoc(doc(db, "lancamentos", editId), dados);
+            alert("Lançamento atualizado com sucesso!");
+            editId = null; // Reseta o estado de edição
+            
+            // Restaura o botão original
+            const btnAdd = document.querySelector(".form button");
+            btnAdd.textContent = "Adicionar";
+            btnAdd.style.background = ""; 
+        } else {
+            // Se não houver editId, estamos CRIANDO NOVO
+            await addDoc(collection(db, "lancamentos"), dados);
+            alert("Lançamento adicionado!");
+        }
+
+        // Limpa o formulário e recarrega a tabela
+        limparFormulario();
+        carregarLancamentos();
+    } catch (e) {
+        console.error("Erro:", e);
+    }
+};
+
+function limparFormulario() {
+    document.getElementById("data").value = "";
+    document.getElementById("cliente").value = "";
+    document.getElementById("descricao").value = "";
+    document.getElementById("valor").value = "";
+    document.getElementById("ajudante").value = "";
+}
