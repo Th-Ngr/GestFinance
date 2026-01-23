@@ -10,90 +10,178 @@
 </head>
 <body>
 
-<h1>Gest Financial</h1>
-
-<section id="auth">
-    <h2>Acesso ao sistema</h2>
-    <input type="email" id="email" placeholder="Email">
-    <input type="password" id="password" placeholder="Senha">
-    <button id="btnLogin">Entrar</button>
-    <button id="btnRegister">Cadastrar</button>
-</section>
-
-<section id="app" style="display:none;">
-    <button id="btnLogoutTop" onclick="logout()" style="float:right;">Sair</button>
-
-    <section class="controls">
-        <label>Mês: <select id="monthSelect"></select></label>
-        <label>Meta Mensal: <input type="number" id="metaInput" placeholder="R$"></label>
-        <button onclick="saveMeta()"><i class="fa-solid fa-floppy-disk"></i> Salvar Meta</button>
-        <button onclick="pdf.mensal()"><i class="fa-solid fa-file-pdf"></i> PDF Mensal</button>
-        <button onclick="pdf.anual()"><i class="fa-solid fa-file-pdf"></i> PDF Anual</button>
-    </section>
-
-    <section class="summary">
-        <p>Faturamento: R$ <span id="totalEntrada">0.00</span></p>
-        <p>Despesas: R$ <span id="totalSaida">0.00</span></p>
-        <p>Lucro Líquido: R$ <span id="lucro">0.00</span></p>
-    </section>
-
-    <section class="form-section">
-        <h2>Novo Lançamento</h2>
-        <div class="form">
-            <input type="date" id="data">
-            <input type="text" id="cliente" placeholder="Cliente / Origem">
-            <input type="text" id="descricao" placeholder="Descrição">
-            <input type="number" id="valor" placeholder="Valor">
-            <select id="tipo">
-                <option value="entrada">Entrada</option>
-                <option value="saida">Saída</option>
-            </select>
-            <select id="pagamento">
-                <option value="Pix">Pix</option>
-                <option value="Dinheiro">Dinheiro</option>
-                <option value="Débito">Débito</option>
-                <option value="Crédito">Crédito</option>
-            </select>
-            <select id="status">
-                <option value="Pago">Pago</option>
-                <option value="A pagar">A pagar</option>
-            </select>
-            <input type="number" id="ajudante" placeholder="Custo ajudante">
-            <button onclick="addLancamento()">Adicionar</button>
+<div class="main-wrapper">
+    <nav class="sidebar">
+        <div class="logo">
+            <i class="fa-solid fa-sack-dollar"></i>
         </div>
-    </section>
+        <ul>
+            <li class="active"><i class="fa-solid fa-house"></i></li>
+            <li><i class="fa-solid fa-chart-line"></i></li>
+            <li><i class="fa-solid fa-star"></i></li>
+            <li><i class="fa-solid fa-gear"></i></li>
+        </ul>
+        <button id="btnLogoutTop" onclick="logout()" class="logout-btn">
+            <i class="fa-solid fa-right-from-bracket"></i>
+        </button>
+    </nav>
 
-    <h2>Entradas</h2>
-    <table>
-        <thead>
-            <tr>
-             <th>Data</th>
-            <th>Cliente</th>
-            <th>Descrição</th>
-            <th>Valor</th>
-            <th>Ajudante</th>
-            <th>Pagamento</th>
-            <th>Status</th>
-            <th>Ação</th>
-        </thead>
-        <tbody id="entradaBody"></tbody>
-    </table>
+    <main class="content">
+        
+        <section id="auth" class="auth-card">
+            <h1>Gest Financial</h1>
+            <h2>Acesso ao sistema</h2>
+            <input type="email" id="email" placeholder="Email">
+            <input type="password" id="password" placeholder="Senha">
+            <div class="auth-buttons">
+                <button id="btnLogin">Entrar</button>
+                <button id="btnRegister">Cadastrar</button>
+            </div>
+        </section>
 
-    <h2>Saídas</h2>
-    <table>
-        <thead> 
-            <th>Data</th>
-            <th>Cliente</th>
-            <th>Descrição</th>
-            <th>Valor</th>
-            <th>Ajudante</th>
-            <th>Pagamento</th>
-            <th>Status</th>
-            <th>Ação</th>
-        </thead>
-        <tbody id="saidaBody"></tbody>
-    </table>
-</section>
+        <section id="app" style="display:none;">
+            
+            <header class="dashboard-header">
+                <div class="month-controls">
+                    <select id="monthSelect"></select>
+                </div>
+                
+                <div class="meta-section">
+                    <div class="meta-info">
+                        <span>Meta Mensal</span>
+                        <input type="number" id="metaInput" placeholder="R$">
+                        <button onclick="saveMeta()" class="btn-save-meta"><i class="fa-solid fa-floppy-disk"></i></button>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-bar" id="metaProgress" style="width: 0%;"></div>
+                    </div>
+                </div>
+
+                <div class="export-buttons">
+                    <button onclick="pdf.mensal()"><i class="fa-solid fa-file-pdf"></i> Mensal</button>
+                    <button onclick="pdf.anual()"><i class="fa-solid fa-file-pdf"></i> Anual</button>
+                </div>
+            </header>
+
+            <section class="summary">
+                <div class="card">
+                    <div class="card-icon blue"><i class="fa-solid fa-wallet"></i></div>
+                    <div>
+                        <p>Faturamento</p>
+                        <h3>R$ <span id="totalEntrada">0.00</span></h3>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-icon red"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+                    <div>
+                        <p>Despesas</p>
+                        <h3>R$ <span id="totalSaida">0.00</span></h3>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-icon green"><i class="fa-solid fa-chart-pie"></i></div>
+                    <div>
+                        <p>Lucro Líquido</p>
+                        <h3 class="txt-green">R$ <span id="lucro">0.00</span></h3>
+                    </div>
+                </div>
+            </section>
+
+            <div class="grid-layout">
+                <section class="form-section card">
+                    <h2>Novo Lançamento</h2>
+                    <div class="form-grid">
+                        <label>Data</label>
+                        <input type="date" id="data">
+                        
+                        <label>Cliente</label>
+                        <input type="text" id="cliente" placeholder="Origem">
+                        
+                        <label>Descrição</label>
+                        <input type="text" id="descricao" placeholder="O que é?">
+                        
+                        <label>Valor</label>
+                        <input type="number" id="valor" placeholder="0.00">
+                        
+                        <label>Tipo</label>
+                        <select id="tipo">
+                            <option value="entrada">Entrada</option>
+                            <option value="saida">Saída</option>
+                        </select>
+                        
+                        <label>Pagamento</label>
+                        <select id="pagamento">
+                            <option value="Pix">Pix</option>
+                            <option value="Dinheiro">Dinheiro</option>
+                            <option value="Débito">Débito</option>
+                            <option value="Crédito">Crédito</option>
+                        </select>
+
+                        <label>Status</label>
+                        <select id="status">
+                            <option value="Pago">Pago</option>
+                            <option value="A pagar">A pagar</option>
+                        </select>
+
+                        <label>Ajudante</label>
+                        <input type="number" id="ajudante" placeholder="Custo">
+
+                        <button onclick="addLancamento()" class="btn-add">Adicionar</button>
+                    </div>
+                </section>
+
+                <div class="tables-container">
+                    <div class="card table-card">
+                        <h2>Entradas</h2>
+                        <div class="table-scroll">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Cliente</th>
+                                        <th>Valor</th>
+                                        <th>Ação</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="entradaBody"></tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="2">TOTAL</td>
+                                        <td id="footerTotalEntrada" class="txt-green">R$ 0.00</td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="card table-card">
+                        <h2>Saídas</h2>
+                        <div class="table-scroll">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Descrição</th>
+                                        <th>Valor</th>
+                                        <th>Ação</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="saidaBody"></tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="2">TOTAL</td>
+                                        <td id="footerTotalSaida" class="txt-red">R$ 0.00</td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div> </section>
+    </main>
+</div>
 
 <script type="module" src="script.js"></script>
 </body>
