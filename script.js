@@ -403,9 +403,6 @@ window.pdf = {
         docPDF.save("Resumo_Financeiro_Anual.pdf");
     }
 };
-// Variável global para saber se estamos editando
-let editId = null;
-
 // 1. Função para carregar os dados no formulário
 window.prepararEdicao = async (id) => {
     try {
