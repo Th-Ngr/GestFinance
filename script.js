@@ -398,6 +398,63 @@ window.carregarLancamentos = async function (mes) {
 
   return lancamentos;
 };
+  // ================= FIREBASE =================
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getAuth,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  getFirestore
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyB7ugVILO8olKtzkCJI_7BRlzY6Qe0-rCM",
+  authDomain: "gst-financeira.firebaseapp.com",
+  projectId: "gst-financeira"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// ================= UI =================
+const authSection = document.getElementById("auth");
+const appSection = document.getElementById("app");
+
+// ================= AUTH =================
+document.getElementById("btnLogin").addEventListener("click", async () => {
+  const email = emailInput.value;
+  const password = passwordInput.value;
+
+  await signInWithEmailAndPassword(auth, email, password);
+});
+
+document.getElementById("btnRegister").addEventListener("click", async () => {
+  const email = emailInput.value;
+  const password = passwordInput.value;
+
+  await createUserWithEmailAndPassword(auth, email, password);
+});
+
+document.getElementById("btnLogout").addEventListener("click", async () => {
+  await signOut(auth);
+});
+
+// ================= LISTENER =================
+onAuthStateChanged(auth, user => {
+  if (user) {
+    authSection.style.display = "none";
+    appSection.style.display = "block";
+  } else {
+    authSection.style.display = "block";
+    appSection.style.display = "none";
+  }
+});
+
   
   window.login = login;
   window.register = register;
