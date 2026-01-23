@@ -373,11 +373,37 @@ for (let i = 0; i < linhasAnotacoes; i++) {
 
   // ===== SALVAR =====
   doc.save("Resumo_Financeiro_Anual.pdf");
-}
+};
+  import {
+  collection,
+  getDocs,
+  query,
+  where
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+window.carregarLancamentos = async function (mes) {
+  const q = query(
+    collection(db, "lancamentos"),
+    where("userId", "==", auth.currentUser.uid),
+    where("mes", "==", mes)
+  );
+
+  const snapshot = await getDocs(q);
+
+  const lancamentos = [];
+
+  snapshot.forEach(doc => {
+    lancamentos.push(doc.data());
+  });
+
+  return lancamentos;
+};
+  
+  window.login = login;
+  window.register = register;
+  window.logout = logout;
+  
   window.pdf = { 
     mensal: exportPDF, 
     anual: exportPDFAnual 
-  .login = login;
-  .register = register;
-  .logout = logout;
-};
+ };
