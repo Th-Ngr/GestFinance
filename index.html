@@ -146,12 +146,7 @@
 <!-- ============ FIREBASE ============ -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import {
-    getFirestore,
-    collection, addDoc, getDocs, query, where,
-    doc, deleteDoc, setDoc, getDoc
-  } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
+  import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
   import {
     getAuth,
     onAuthStateChanged,
@@ -163,7 +158,7 @@
   const firebaseConfig = {
     apiKey: "AIzaSyB7ugVILO8olKtzkCJI_7BRlzY6Qe0-rCM",
     authDomain: "gst-financeira.firebaseapp.com",
-    projectId: "gst-financeira"
+    projectId: "gst-financeira",
   };
 
   const app = initializeApp(firebaseConfig);
@@ -171,29 +166,23 @@
   window.db = getFirestore(app);
   window.auth = getAuth(app);
 
-    // 🔓 Expor funções do Auth para o script.js
-window.signInWithEmailAndPassword = signInWithEmailAndPassword;
-window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
-window.signOut = signOut;
-  
-  // 🔐 Controle de sessão
+  // 🔥 EXPOR FUNÇÕES DO AUTH
+  window.signInWithEmailAndPassword = signInWithEmailAndPassword;
+  window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
+  window.signOut = signOut;
+
+  // 🔥 ESTE É O PONTO QUE FALTAVA
   onAuthStateChanged(auth, user => {
     if (user) {
-      window.userId = user.uid;
+      console.log("Usuário logado:", user.email);
+
       document.getElementById("auth").style.display = "none";
       document.getElementById("app").style.display = "block";
-
-      if (window.carregarLancamentos) {
-        carregarLancamentos();
-        carregarMeta();
-      }
     } else {
-      window.userId = null;
       document.getElementById("auth").style.display = "block";
       document.getElementById("app").style.display = "none";
     }
   });
-  
 </script>
 
 <!-- SCRIPT PRINCIPAL -->
