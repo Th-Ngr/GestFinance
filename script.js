@@ -83,9 +83,6 @@ onAuthStateChanged(auth, user => {
 // ===============================
 // 🔗 ELEMENTOS
 // ===============================
-const emailInput = document.getElementById("email");
-const passwordInput = document.getElementById("password");
-
 const entradaBody = document.getElementById("entradaBody");
 const saidaBody = document.getElementById("saidaBody");
 
