@@ -1,3 +1,85 @@
+// ================= FIREBASE IMPORTS (TOPO OBRIGATÓRIO) =================
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getAuth,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  where,
+  deleteDoc,
+  doc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+// ================= FIREBASE CONFIG =================
+const firebaseConfig = {
+  apiKey: "AIzaSyB7ugVILO8olKtzkCJI_7BRlzY6Qe0-rCM",
+  authDomain: "gst-financeira.firebaseapp.com",
+  projectId: "gst-financeira"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// ================= ELEMENTOS =================
+const emailInput = document.getElementById("email");
+const passwordInput = document.getElementById("password");
+
+const authSection = document.getElementById("auth");
+const appSection = document.getElementById("app");
+
+// ================= AUTH (CORRIGIDO) =================
+document.getElementById("btnRegister").addEventListener("click", async () => {
+  try {
+    await createUserWithEmailAndPassword(
+      auth,
+      emailInput.value,
+      passwordInput.value
+    );
+    console.log("Usuário criado");
+  } catch (e) {
+    console.error(e.code, e.message);
+    alert(e.message);
+  }
+});
+
+document.getElementById("btnLogin").addEventListener("click", async () => {
+  try {
+    await signInWithEmailAndPassword(
+      auth,
+      emailInput.value,
+      passwordInput.value
+    );
+    console.log("Login OK");
+  } catch (e) {
+    console.error(e.code, e.message);
+    alert(e.message);
+  }
+});
+
+document.getElementById("btnLogout").addEventListener("click", async () => {
+  await signOut(auth);
+});
+
+// ================= LISTENER =================
+onAuthStateChanged(auth, user => {
+  if (user) {
+    authSection.style.display = "none";
+    appSection.style.display = "block";
+  } else {
+    authSection.style.display = "block";
+    appSection.style.display = "none";
+  }
+});
+
 // ===============================
 // 🔗 ELEMENTOS
 // ===============================
@@ -23,27 +105,7 @@ const lucro = document.getElementById("lucro");
 
 const monthSelect = document.getElementById("monthSelect");
 
-// ===============================
-// 🔐 AUTH
-// ===============================
-
-fuconst emailInput = document.getElementById("email");
-const passwordInput = document.getElementById("password");
-
-document.getElementById("btnRegister").addEventListener("click", async () => {
-  try {
-    await createUserWithEmailAndPassword(
-      auth,
-      emailInput.value,
-      passwordInput.value
-    );
-    console.log("Usuário criado");
-  } catch (e) {
-    console.error(e.code, e.message);
-    alert(e.message);
-  }
-});
-
+/
 document.getElementById("btnLogin").addEventListener("click", async () => {
   try {
     await signInWithEmailAndPassword(
@@ -81,90 +143,7 @@ monthSelect.addEventListener("change", () => {
   carregarMeta();
 });
 
-// ===============================
-// 🔥 FIRESTORE
-// ===============================
 
-async function carregarLancamentos() {
-  if (!checkAuth()) return;
-
-  entradaBody.innerHTML = "";
-  saidaBody.innerHTML = "";
-
-  let ent = 0;
-  let sai = 0;
-
-  const q = query(
-    collection(db, "usuarios", userId, "lancamentos"),
-    where("mes", "==", monthSelect.value)
-  );
-
-  const snap = await getDocs(q);
-
-  snap.forEach(docSnap => {
-    const l = docSnap.data();
-
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${l.data || "-"}</td>
-      <td>${l.cliente || "-"}</td>
-      <td>${l.descricao || "-"}</td>
-      <td>R$ ${l.valor.toFixed(2)}</td>
-      <td>R$ ${(l.ajudante || 0).toFixed(2)}</td>
-      <td>${l.pagamento}</td>
-      <td class="${l.status === "Pago" ? "status-pago" : "status-apagar"}">${l.status}</td>
-      <td>
-        <button class="action-btn" onclick="deletarLancamento('${docSnap.id}')">
-          🗑️
-        </button>
-      </td>
-    `;
-
-    if (l.tipo === "entrada") {
-      entradaBody.appendChild(tr);
-      ent += l.valor;
-    } else {
-      saidaBody.appendChild(tr);
-      sai += l.valor;
-    }
-  });
-
-  totalEntrada.textContent = ent.toFixed(2);
-  totalSaida.textContent = sai.toFixed(2);
-  lucro.textContent = (ent - sai).toFixed(2);
-}
-
-async function addLancamento() {
-  if (!checkAuth()) return;
-
-  const lancamento = {
-    data: dataInput.value,
-    cliente: cliente.value,
-    descricao: descricao.value,
-    valor: Number(valor.value),
-    tipo: tipo.value,
-    pagamento: pagamento.value,
-    status: status.value,
-    ajudante: Number(ajudante.value || 0),
-    mes: monthSelect.value
-  };
-
-  await addDoc(
-    collection(db, "usuarios", userId, "lancamentos"),
-    lancamento
-  );
-
-  limparFormulario();
-  carregarLancamentos();
-}
-
-async function deletarLancamento(id) {
-  if (!checkAuth()) return;
-  if (!confirm("Excluir lançamento?")) return;
-
-  await deleteDoc(
-    doc(db, "usuarios", userId, "lancamentos", id)
-  );
 
   /* ===================== PDF ===================== */
 
@@ -424,69 +403,12 @@ window.carregarLancamentos = async function (mes) {
 
   return lancamentos;
 };
-  // ================= FIREBASE =================
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import {
-  getAuth,
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import {
-  getFirestore
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyB7ugVILO8olKtzkCJI_7BRlzY6Qe0-rCM",
-  authDomain: "gst-financeira.firebaseapp.com",
-  projectId: "gst-financeira"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-// ================= UI =================
-const authSection = document.getElementById("auth");
-const appSection = document.getElementById("app");
-
-// ================= AUTH =================
-document.getElementById("btnLogin").addEventListener("click", async () => {
-  const email = emailInput.value;
-  const password = passwordInput.value;
-
-  await signInWithEmailAndPassword(auth, email, password);
-});
-
-document.getElementById("btnRegister").addEventListener("click", async () => {
-  const email = emailInput.value;
-  const password = passwordInput.value;
-
-  await createUserWithEmailAndPassword(auth, email, password);
-});
-
-document.getElementById("btnLogout").addEventListener("click", async () => {
-  await signOut(auth);
-});
-
-// ================= LISTENER =================
-onAuthStateChanged(auth, user => {
-  if (user) {
-    authSection.style.display = "none";
-    appSection.style.display = "block";
-  } else {
-    authSection.style.display = "block";
-    appSection.style.display = "none";
-  }
-});
-
-  
+ 
   window.login = login;
   window.register = register;
   window.logout = logout;
   
   window.pdf = { 
-    mensal: exportPDF, 
+    ensal: exportPDF, 
     anual: exportPDFAnual 
  };
