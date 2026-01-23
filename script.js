@@ -289,5 +289,101 @@ function exportPDF() {
 }
 
 loadMonth();
+function exportPDFAnual() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF("p", "mm", "a4");
+
+  const data = getData();
+  let y = 20;
+
+  // ===== TÍTULO =====
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(14);
+  doc.text("RESUMO FINANCEIRO ANUAL", 105, y, { align: "center" });
+  y += 12;
+
+  // ===== CALCULAR TOTAIS =====
+  let totalEntradasAno = 0;
+  let totalSaidasAno = 0;
+  let mesesComMovimento = 0;
+
+  const resumoMensal = months.map(mes => {
+    const lanc = data[mes]?.lancamentos || [];
+
+    let ent = 0;
+    let sai = 0;
+
+    lanc.forEach(l => {
+      if (l.tipo === "entrada") ent += l.valor;
+      else sai += l.valor;
+    });
+
+    if (ent !== 0 || sai !== 0) mesesComMovimento++;
+
+    totalEntradasAno += ent;
+    totalSaidasAno += sai;
+
+    return {
+      mes,
+      entradas: ent,
+      saidas: sai,
+      total: ent - sai
+    };
+  });
+
+  const mediaMensal =
+    mesesComMovimento > 0
+      ? (totalEntradasAno - totalSaidasAno) / mesesComMovimento
+      : 0;
+
+  // ===== MÉDIA MENSAL =====
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  doc.text(`Média Mensal: R$ ${mediaMensal.toFixed(2)}`, 15, y);
+  y += 8;
+
+  // ===== CABEÇALHO DA TABELA =====
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9);
+  doc.text("Mês", 15, y);
+  doc.text("Entradas", 70, y);
+  doc.text("Saídas", 115, y);
+  doc.text("Total", 155, y);
+  y += 4;
+
+  doc.line(15, y, 195, y);
+  y += 4;
+
+  // ===== LINHAS =====
+  doc.setFont("helvetica", "normal");
+
+  resumoMensal.forEach(l => {
+    if (y > 270) {
+      doc.addPage();
+      y = 20;
+    }
+
+    doc.text(l.mes, 15, y);
+    doc.text(`R$ ${l.entradas.toFixed(2)}`, 70, y);
+    doc.text(`R$ ${l.saidas.toFixed(2)}`, 115, y);
+    doc.text(`R$ ${l.total.toFixed(2)}`, 155, y);
+    y += 5;
+  });
+
+  // ===== ANOTAÇÕES =====
+  y += 12;
+  doc.setFontSize(9);
+  doc.text("ANOTAÇÕES", 15, y);
+  y += 10;
+  doc.line(15, y, 195, y);
+
+  // ===== ASSINATURA =====
+  y += 20;
+  doc.text("Assinatura do responsável: ________________________________", 15, y);
+
+  // ===== SALVAR =====
+  doc.save("Resumo_Financeiro_Anual.pdf");
+}
+window.exportPDFAnual = exportPDFAnual;
 window.exportPDF = exportPDF;
 
