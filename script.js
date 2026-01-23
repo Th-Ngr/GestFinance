@@ -447,7 +447,7 @@ function formatarData(dataISO) {
     
     const [ano, mes, dia] = partes;
     return `${dia}-${mes}-${ano}`;
-}
+};
 
 // Use formatarData(item.data) na hora de criar a linha da tabela
 function abrirEdicao(id) {
