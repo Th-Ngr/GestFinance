@@ -15,6 +15,8 @@ const totalEntrada = document.getElementById("totalEntrada");
 const totalSaida = document.getElementById("totalSaida");
 const lucro = document.getElementById("lucro");
 
+let editIndex = null;
+
 const months = [
   "Janeiro","Fevereiro","Março","Abril","Maio","Junho",
   "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"
@@ -59,14 +61,18 @@ function loadMonth() {
       <td>R$ ${l.valor.toFixed(2)}</td>
       <td>R$ ${(l.ajudante || 0).toFixed(2)}</td>
       <td>${l.pagamento}</td>
-      <td><button onclick="removeLancamento(${i})">X</button></td>
+      <td class="${l.status === "Pago" ? "status-pago" : "status-apagar"}">
+        ${l.status}
+      </td>
+      <td>
+        <button class="action-btn" onclick="editLancamento(${i})">
+          ✏️
+        </button>
+      </td>
     `;
 
-    if (l.tipo === "entrada") {
-      entradaBody.appendChild(tr);
-    } else {
-      saidaBody.appendChild(tr);
-    }
+    if (l.tipo === "entrada") entradaBody.appendChild(tr);
+    else saidaBody.appendChild(tr);
   });
 
   calculate();
@@ -80,12 +86,7 @@ function addLancamento() {
     data[month] = { meta: 0, lancamentos: [] };
   }
 
-  if (!tipo.value) {
-    alert("Selecione Entrada ou Saída");
-    return;
-  }
-
-  data[month].lancamentos.push({
+  const novoLancamento = {
     data: dataInput.value,
     cliente: cliente.value,
     descricao: descricao.value,
@@ -94,18 +95,36 @@ function addLancamento() {
     pagamento: pagamento.value,
     status: status.value,
     ajudante: Number(ajudante.value || 0)
-  });
+  };
+
+  if (editIndex !== null) {
+    data[month].lancamentos[editIndex] = novoLancamento;
+    editIndex = null;
+    document.querySelector(".form button").innerText = "Adicionar";
+  } else {
+    data[month].lancamentos.push(novoLancamento);
+  }
 
   saveData(data);
   clearForm();
   loadMonth();
 }
 
-function removeLancamento(index) {
+function editLancamento(index) {
   const data = getData();
-  data[monthSelect.value].lancamentos.splice(index, 1);
-  saveData(data);
-  loadMonth();
+  const l = data[monthSelect.value].lancamentos[index];
+
+  dataInput.value = l.data;
+  cliente.value = l.cliente;
+  descricao.value = l.descricao;
+  valor.value = l.valor;
+  tipo.value = l.tipo;
+  pagamento.value = l.pagamento;
+  status.value = l.status;
+  ajudante.value = l.ajudante;
+
+  editIndex = index;
+  document.querySelector(".form button").innerText = "Salvar edição";
 }
 
 function saveMeta() {
@@ -128,17 +147,12 @@ function calculate() {
   let saida = 0;
 
   data.lancamentos.forEach(l => {
-    if (l.tipo === "entrada") {
-      entrada += l.valor;
-    } else {
-      saida += l.valor;
-    }
+    if (l.tipo === "entrada") entrada += l.valor;
+    else saida += l.valor;
   });
 
   totalEntrada.textContent = entrada.toFixed(2);
   totalSaida.textContent = saida.toFixed(2);
-
-  // ✅ lucro NÃO desconta ajudante
   lucro.textContent = (entrada - saida).toFixed(2);
 }
 
@@ -149,75 +163,7 @@ function clearForm() {
   valor.value = "";
   ajudante.value = "";
   tipo.value = "entrada";
+  status.value = "Pago";
 }
-// ENTRADAS
-doc.setFont("helvetica", "bold");
-doc.text("ENTRADAS", 15, y);
-y += 6;
 
-doc.setFontSize(9);
-doc.text("Data", 15, y);
-doc.text("Cliente", 35, y);
-doc.text("Descrição", 75, y);
-doc.text("Valor", 140, y);
-doc.text("Pagamento", 165, y);
-y += 4;
-doc.line(15, y, 195, y);
-y += 4;
-
-doc.setFont("helvetica", "normal");
-
-data.lancamentos
-  .filter(l => l.tipo === "entrada")
-  .forEach(l => {
-    if (y > 270) {
-      doc.addPage();
-      y = 20;
-    }
-
-    doc.text(l.data || "-", 15, y);
-    doc.text(l.cliente || "-", 35, y);
-    doc.text(l.descricao || "-", 75, y);
-    doc.text(`R$ ${l.valor.toFixed(2)}`, 140, y);
-    doc.text(l.pagamento, 165, y);
-    y += 5;
-  });
-
-y += 8;
-doc.line(15, y, 195, y);
-y += 6;
-
-// SAÍDAS
-doc.setFont("helvetica", "bold");
-doc.text("SAÍDAS", 15, y);
-y += 6;
-
-doc.setFontSize(9);
-doc.text("Data", 15, y);
-doc.text("Origem", 35, y);
-doc.text("Descrição", 75, y);
-doc.text("Valor", 140, y);
-doc.text("Pagamento", 165, y);
-y += 4;
-doc.line(15, y, 195, y);
-y += 4;
-
-doc.setFont("helvetica", "normal");
-
-data.lancamentos
-  .filter(l => l.tipo === "saida")
-  .forEach(l => {
-    if (y > 270) {
-      doc.addPage();
-      y = 20;
-    }
-
-    doc.text(l.data || "-", 15, y);
-    doc.text(l.cliente || "-", 35, y);
-    doc.text(l.descricao || "-", 75, y);
-    doc.text(`R$ ${l.valor.toFixed(2)}`, 140, y);
-    doc.text(l.pagamento, 165, y);
-    y += 5;
-  });
-
-
+loadMonth();
