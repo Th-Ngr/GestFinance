@@ -65,9 +65,7 @@ function loadMonth() {
         ${l.status}
       </td>
       <td>
-        <button class="action-btn" onclick="editLancamento(${i})">
-          ✏️
-        </button>
+        <button class="action-btn" onclick="editLancamento(${i})">✏️</button>
       </td>
     `;
 
@@ -164,6 +162,130 @@ function clearForm() {
   ajudante.value = "";
   tipo.value = "entrada";
   status.value = "Pago";
+}
+
+/* ===================== PDF ===================== */
+
+function exportPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF("p", "mm", "a4");
+
+  const data = getData();
+  const month = monthSelect.value;
+
+  if (!data[month]) {
+    alert("Não há dados para este mês.");
+    return;
+  }
+
+  const lancamentos = data[month].lancamentos;
+  const meta = data[month].meta || 0;
+
+  let y = 20;
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(14);
+  doc.text("RELATÓRIO FINANCEIRO MENSAL", 105, y, { align: "center" });
+  y += 10;
+
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  doc.text(`Mês de Referência: ${month}`, 15, y);
+  y += 6;
+  doc.text(`Meta Mensal: R$ ${meta.toFixed(2)}`, 15, y);
+  y += 6;
+
+  doc.line(15, y, 195, y);
+  y += 8;
+
+  let totalEntrada = 0;
+  let totalSaida = 0;
+
+  lancamentos.forEach(l => {
+    if (l.tipo === "entrada") totalEntrada += l.valor;
+    else totalSaida += l.valor;
+  });
+
+  doc.setFont("helvetica", "bold");
+  doc.text("RESUMO FINANCEIRO", 15, y);
+  y += 6;
+
+  doc.setFont("helvetica", "normal");
+  doc.text(`Faturamento Total: R$ ${totalEntrada.toFixed(2)}`, 15, y);
+  y += 5;
+  doc.text(`Total de Despesas: R$ ${totalSaida.toFixed(2)}`, 15, y);
+  y += 5;
+  doc.text(`Lucro Líquido: R$ ${(totalEntrada - totalSaida).toFixed(2)}`, 15, y);
+  y += 8;
+
+  doc.line(15, y, 195, y);
+  y += 8;
+
+  doc.setFont("helvetica", "bold");
+  doc.text("ENTRADAS", 15, y);
+  y += 6;
+
+  doc.setFontSize(9);
+  doc.text("Data", 15, y);
+  doc.text("Cliente", 35, y);
+  doc.text("Descrição", 75, y);
+  doc.text("Valor", 140, y);
+  doc.text("Pagamento", 165, y);
+  y += 4;
+  doc.line(15, y, 195, y);
+  y += 4;
+
+  doc.setFont("helvetica", "normal");
+
+  lancamentos.filter(l => l.tipo === "entrada").forEach(l => {
+    if (y > 270) { doc.addPage(); y = 20; }
+    doc.text(l.data || "-", 15, y);
+    doc.text(l.cliente || "-", 35, y);
+    doc.text(l.descricao || "-", 75, y);
+    doc.text(`R$ ${l.valor.toFixed(2)}`, 140, y);
+    doc.text(l.pagamento, 165, y);
+    y += 5;
+  });
+
+  y += 8;
+  doc.setFont("helvetica", "bold");
+  doc.text("SAÍDAS", 15, y);
+  y += 6;
+
+  doc.setFontSize(9);
+  doc.text("Data", 15, y);
+  doc.text("Origem", 35, y);
+  doc.text("Descrição", 75, y);
+  doc.text("Valor", 140, y);
+  doc.text("Pagamento", 165, y);
+  y += 4;
+  doc.line(15, y, 195, y);
+  y += 4;
+
+  doc.setFont("helvetica", "normal");
+
+  lancamentos.filter(l => l.tipo === "saida").forEach(l => {
+    if (y > 270) { doc.addPage(); y = 20; }
+    doc.text(l.data || "-", 15, y);
+    doc.text(l.cliente || "-", 35, y);
+    doc.text(l.descricao || "-", 75, y);
+    doc.text(`R$ ${l.valor.toFixed(2)}`, 140, y);
+    doc.text(l.pagamento, 165, y);
+    y += 5;
+  });
+
+  y += 15;
+  doc.setFontSize(8);
+  doc.text(
+    "Documento gerado automaticamente para fins de controle financeiro e arquivamento.",
+    15,
+    y
+  );
+
+  y += 10;
+  doc.text("Assinatura do responsável: ________________________________", 15, y);
+
+  doc.save(`Relatorio_Financeiro_${month}.pdf`);
 }
 
 loadMonth();
