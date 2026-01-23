@@ -23,6 +23,67 @@ body {
     overflow-x: hidden;
 }
 
+/* --- DESIGN DA TELA DE LOGIN --- */
+#auth {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    width: 100vw;
+    background: var(--sidebar-bg); /* Usa o degradê turquesa */
+    position: fixed;
+    top: 0; left: 0; z-index: 9999;
+}
+
+#auth h1 { color: white; margin-bottom: 20px; font-size: 2.5rem; }
+
+#auth h2 { color: #f0f4f7; font-size: 1rem; margin-bottom: 30px; opacity: 0.9; }
+
+.auth-card-content {
+    background: white;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+    width: 100%;
+    max-width: 380px;
+    display: flex;
+    flex-direction: column;
+}
+
+#auth input {
+    margin-bottom: 15px;
+    padding: 12px 15px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 1rem;
+}
+
+#auth button {
+    padding: 12px;
+    border-radius: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+#btnLogin {
+    background: var(--primary);
+    color: white;
+    border: none;
+    margin-bottom: 10px;
+}
+
+#btnLogin:hover { background: #008080; transform: translateY(-2px); }
+
+#btnRegister {
+    background: white;
+    color: var(--primary);
+    border: 2px solid var(--primary);
+}
+
+#btnRegister:hover { background: #f0fdfa; }
+
 /* --- LAYOUT E SIDEBAR --- */
 .main-wrapper { display: flex; min-height: 100vh; }
 
