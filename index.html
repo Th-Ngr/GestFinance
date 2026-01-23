@@ -113,7 +113,21 @@
     </thead>
     <tbody id="saidaBody"></tbody>
   </table>
+  
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+  const firebaseConfig = {
+    apiKey: "AIzaSyB7ugVILO8olKtzkCJI_7BRlzY6Qe0-rCM",
+    authDomain: "gst-financeira.firebaseapp.com",
+    projectId: "gst-financeira",
+  };
+
+  window.app = initializeApp(firebaseConfig);
+  window.db = getFirestore(app);
+</script>
+  
   <!-- SCRIPT PRINCIPAL -->
   <script src="script.js"></script>
 
