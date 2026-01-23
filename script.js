@@ -102,7 +102,7 @@ async function carregarLancamentos() {
         const item = { id: d.id, ...d.data() };
         // Substitua a parte da variável 'row' dentro do loop snap.forEach na função carregarLancamentos:
 
-        const row = `
+        const row =
             <tr>
                 <td>${item.data || "-"}</td>
                 <td>${item.cliente || "-"}</td>
