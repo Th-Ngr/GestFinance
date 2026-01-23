@@ -1,6 +1,8 @@
 // ===============================
 // 🔗 ELEMENTOS
 // ===============================
+const emailInput = document.getElementById("email");
+const passwordInput = document.getElementById("password");
 
 const entradaBody = document.getElementById("entradaBody");
 const saidaBody = document.getElementById("saidaBody");
@@ -25,13 +27,37 @@ const monthSelect = document.getElementById("monthSelect");
 // 🔐 AUTH
 // ===============================
 
-function checkAuth() {
-  if (!window.userId) {
-    alert("Faça login primeiro");
-    return false;
+fuconst emailInput = document.getElementById("email");
+const passwordInput = document.getElementById("password");
+
+document.getElementById("btnRegister").addEventListener("click", async () => {
+  try {
+    await createUserWithEmailAndPassword(
+      auth,
+      emailInput.value,
+      passwordInput.value
+    );
+    console.log("Usuário criado");
+  } catch (e) {
+    console.error(e.code, e.message);
+    alert(e.message);
   }
-  return true;
-}
+});
+
+document.getElementById("btnLogin").addEventListener("click", async () => {
+  try {
+    await signInWithEmailAndPassword(
+      auth,
+      emailInput.value,
+      passwordInput.value
+    );
+    console.log("Login OK");
+  } catch (e) {
+    console.error(e.code, e.message);
+    alert(e.message);
+  }
+});
+
 
 // ===============================
 // 📅 MESES
