@@ -139,3 +139,10 @@ async function deletarLancamento(id) {
   await deleteDoc(
     doc(db, "usuarios", userId, "lancamentos", id)
   );
+  window.pdf = { 
+    mensal: exportPDF, 
+    anual: exportPDFAnual 
+  .login = login;
+  .register = register;
+  .logout = logout;
+};
