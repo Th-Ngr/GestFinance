@@ -289,3 +289,5 @@ function exportPDF() {
 }
 
 loadMonth();
+window.exportPDF = exportPDF;
+
