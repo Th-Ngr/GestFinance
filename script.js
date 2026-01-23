@@ -420,6 +420,43 @@ async function addLancamento() {
 
   alert("Lançamento salvo 🔥");
 }
+async function login() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch (e) {
+    alert("Erro ao entrar: " + e.message);
+  }
+}
+async function register() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  try {
+    await createUserWithEmailAndPassword(auth, email, password);
+    alert("Cadastro realizado com sucesso 🎉");
+  } catch (e) {
+    alert("Erro ao cadastrar: " + e.message);
+  }
+}
+onAuthStateChanged(auth, user => {
+  if (user) {
+    window.userId = user.uid;
+
+    document.getElementById("auth").style.display = "none";
+    document.getElementById("app").style.display = "block";
+
+    carregarLancamentos(monthSelect.value);
+  } else {
+    document.getElementById("auth").style.display = "block";
+    document.getElementById("app").style.display = "none";
+  }
+});
+async function logout() {
+  await signOut(auth);
+}
 
 
 window.pdf = {
