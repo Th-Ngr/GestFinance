@@ -89,57 +89,68 @@ window.addLancamento = async () => {
 };
 
 async function carregarLancamentos() {
+    if (!auth.currentUser) return;
+    
     const mesAtual = monthSelect.value;
     const q = query(collection(db, "lancamentos"), 
               where("userId", "==", auth.currentUser.uid), 
               where("mes", "==", mesAtual));
 
-    const snap = await getDocs(q);
-    const entradas = [];
-    const saidas = [];
-    let totE = 0, totS = 0;
+    try {
+        const snap = await getDocs(q);
+        let totE = 0; // Acumulador de Entradas
+        let totS = 0; // Acumulador de Saídas
 
-    document.getElementById("entradaBody").innerHTML = "";
-    document.getElementById("saidaBody").innerHTML = "";
+        const entradaBody = document.getElementById("entradaBody");
+        const saidaBody = document.getElementById("saidaBody");
+        entradaBody.innerHTML = "";
+        saidaBody.innerHTML = "";
 
-    snap.forEach(d => {
-        const item = { id: d.id, ...d.data() };
-        // Substitua a parte da variável 'row' dentro do loop snap.forEach na função carregarLancamentos:
-        const dataFormatadaBR = formatarData(item.data);
-const row = `
-    <tr>
-        <td>${item.data || "-"}</td>
-        <td>${item.cliente || "-"}</td>
-        <td>${item.descricao || "-"}</td>
-        <td>R$ ${Number(item.valor).toFixed(2)}</td>
-        <td>R$ ${Number(item.ajudante || 0).toFixed(2)}</td>
-        <td>${item.pagamento || "-"}</td>
-        <td><span class="status-${item.status.toLowerCase().replace(" ", "-")}">${item.status || "-"}</span></td>
-        <td>
-            <button class="btn-edit" onclick="prepararEdicao('${item.id}')" title="Editar">
-                <i class="fa-solid fa-pen-to-square"> </i>
-            </button>
-            <button class="btn-delete" onclick="deletar('${item.id}')" title="Excluir">
-                <i class="fa-solid fa-trash"></i>
-            </button>
-        </td>
-    </tr>
-`;
+        snap.forEach(d => {
+            const item = { id: d.id, ...d.data() };
+            
+            // GARANTIA: Converte para número. Se for inválido, vira 0.
+            const valorNumerico = parseFloat(item.valor) || 0;
+
+            const row = `
+                <tr>
+                    <td>${formatarData(item.data)}</td>
+                    <td>${item.cliente || "-"}</td>
+                    <td>${item.descricao || "-"}</td>
+                    <td>R$ ${valorNumerico.toFixed(2)}</td>
+                    <td>R$ ${Number(item.ajudante || 0).toFixed(2)}</td>
+                    <td>${item.pagamento || "-"}</td>
+                    <td><span class="status-${item.status.toLowerCase().replace(" ", "-")}">${item.status}</span></td>
+                    <td>
+                        <button class="btn-edit" onclick="prepararEdicao('${item.id}')"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-delete" onclick="deletar('${item.id}')"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>`;
+
+            if (item.tipo === "entrada") {
+                totE += valorNumerico; // Soma aqui
+                entradaBody.innerHTML += row;
+            } else {
+                totS += valorNumerico; // Soma aqui
+                saidaBody.innerHTML += row;
+            }
+        });
+
+        // ATUALIZAÇÃO DOS CARDS (Fora do loop forEach)
+        // Usamos .innerText para garantir que o valor apareça no <span> correto
+        document.getElementById("totalEntrada").innerText = totE.toFixed(2);
+        document.getElementById("totalSaida").innerText = totS.toFixed(2);
         
-        if (item.tipo === "entrada") {
-            totE += item.valor;
-            document.getElementById("entradaBody").innerHTML += row;
-            entradas.push(item);
-        } else {
-            totS += item.valor;
-            document.getElementById("saidaBody").innerHTML += row;
-            saidas.push(item);
-        }
-    });
+        const lucroTotal = totE - totS;
+        const elLucro = document.getElementById("lucro");
+        elLucro.innerText = lucroTotal.toFixed(2);
 
-   // document.getElementById("totalEntrada").textContent = totE.toFixed(2);
-    //document.getElementById("totalSaida").textContent = totS.toFixed(2);
-    //document.getElementById("lucro").textContent = (totE - totS).toFixed(2);
+        // Ajuste de cor automático do Lucro
+        elLucro.style.color = lucroTotal >= 0 ? "#2ecc71" : "#e74c3c";
+
+    } catch (error) {
+        console.error("Erro ao somar cards:", error);
+    }
 }
 
 window.deletar = async (id) => {
