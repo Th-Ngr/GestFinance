@@ -12,6 +12,10 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+window.db = db;
+window.getDocs = getDocs;
+window.collection = collection;
+
 // ELEMENTOS DE TELA
 const authSection = document.getElementById("auth");
 const appSection = document.getElementById("app");
