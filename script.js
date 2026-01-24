@@ -147,6 +147,7 @@ async function carregarLancamentos() {
 
         // Ajuste de cor automático do Lucro
         elLucro.style.color = lucroTotal >= 0 ? "#2ecc71" : "#e74c3c";
+        elLucro.parentElement.style.color = corLucro;
 
     } catch (error) {
         console.error("Erro ao somar cards:", error);
