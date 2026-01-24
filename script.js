@@ -160,7 +160,7 @@ async function carregarLancamentos() {
         
         // Aplicamos a cor no PAI (o H3), assim o "R$" e o "span" mudam juntos
         elLucro.parentElement.style.color = corFinal;
-}
+        
 window.deletar = async (id) => {
     if(confirm("Deseja excluir?")) {
         await deleteDoc(doc(db, "lancamentos", id));
