@@ -145,8 +145,8 @@ async function carregarLancamentos() {
                     saidaBody.innerHTML += row;
                        }
                                          }    );
-        }
-}
+                }
+
 
         // ATUALIZAÇÃO DOS CARDS (Fora do loop forEach)
         document.getElementById("totalEntrada").innerText = totE.toFixed(2);
@@ -162,6 +162,7 @@ async function carregarLancamentos() {
         
         // Aplicamos a cor no PAI (o H3), assim o "R$" e o "span" mudam juntos
         elLucro.parentElement.style.color = corFinal;
+            }
         
 window.deletar = async (id) => {
     if(confirm("Deseja excluir?")) {
