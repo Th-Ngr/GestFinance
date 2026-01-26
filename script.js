@@ -104,14 +104,20 @@ async function carregarLancamentos() {
             itensParaExibir.push({ id: d.id, ...d.data() });
         });
 
-        // --- NOVA LÓGICA DE ORDENAÇÃO ROBUSTA ---
+        // --- ORDENAÇÃO ULTRA ROBUSTA (A Prova de Erros) ---
         itensParaExibir.sort((a, b) => {
-            // Converte as datas para o formato que o JS entende (AAAA-MM-DD) antes de comparar
-            const dateA = new Date(a.data);
-            const dateB = new Date(b.data);
-            return dateA - dateB; // Ordem crescente (antigos primeiro)
+            // Se a data for YYYY-MM-DD, o new Date() funciona direto.
+            // Se for DD/MM/YYYY, precisamos tratar:
+            const formatar = (d) => {
+                if (d.includes('/')) {
+                    const [dia, mes, ano] = d.split('/');
+                    return new Date(ano, mes - 1, dia).getTime();
+                }
+                return new Date(d).getTime();
+            };
+            return formatar(a.data) - formatar(b.data);
         });
-        // ----------------------------------------
+        // --------------------------------------------------
 
         let totE = 0; 
         let totS = 0; 
@@ -158,7 +164,7 @@ async function carregarLancamentos() {
         elLucro.parentElement.style.color = corFinal;
 
     } catch (error) {
-        console.error("Erro ao carregar e ordenar:", error);
+        console.error("Erro fatal na ordenação:", error);
     }
 }
 
