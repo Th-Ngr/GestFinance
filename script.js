@@ -93,7 +93,6 @@ async function carregarLancamentos() {
     
     const mesAtual = monthSelect.value;
     
-    // Query sem o orderBy para evitar erros de índice no Firebase
     const q = query(collection(db, "lancamentos"), 
               where("userId", "==", auth.currentUser.uid), 
               where("mes", "==", mesAtual));
@@ -101,13 +100,11 @@ async function carregarLancamentos() {
     try {
         const snap = await getDocs(q);
         
-        // 1. Criar lista para ordenação
         let itensParaExibir = [];
         snap.forEach(d => {
             itensParaExibir.push({ id: d.id, ...d.data() });
         });
 
-        // 2. Ordenar por DATA (Antigos primeiro)
         itensParaExibir.sort((a, b) => new Date(a.data) - new Date(b.data));
 
         let totE = 0; 
@@ -118,7 +115,6 @@ async function carregarLancamentos() {
         entradaBody.innerHTML = "";
         saidaBody.innerHTML = "";
 
-        // 3. Loop na lista JÁ ORDENADA
         itensParaExibir.forEach(item => {
             const valorNumerico = parseFloat(item.valor) || 0;
 
@@ -140,14 +136,12 @@ async function carregarLancamentos() {
             if (item.tipo === "entrada") {
                 totE += valorNumerico;
                 entradaBody.innerHTML += row;
-                                        } 
-            else {
+            } else {
                 totS += valorNumerico;
                 saidaBody.innerHTML += row;
-                }
-        );
+            }
+        }); // <-- AQUI: Corrigido o fechamento do forEach
 
-        // 4. ATUALIZAÇÃO DOS CARDS
         document.getElementById("totalEntrada").innerText = totE.toFixed(2);
         document.getElementById("totalSaida").innerText = totS.toFixed(2);
         
@@ -155,15 +149,13 @@ async function carregarLancamentos() {
         const elLucro = document.getElementById("lucro");
         elLucro.innerText = lucroTotal.toFixed(2);
 
-        // CORREÇÃO: Aplica a cor no H3 (Pai) para pintar o "R$" também
         const corFinal = lucroTotal >= 0 ? "#2ecc71" : "#e74c3c";
         elLucro.parentElement.style.color = corFinal;
 
-     catch (error) {
-        // O Catch é obrigatório para evitar o erro de Syntax
+    } catch (error) { // <-- AQUI: Agora o try foi fechado e o catch funciona
         console.error("Erro ao carregar lançamentos:", error);
     }
-};
+} // <-- AQUI: Fecha a função corretamente
 window.deletar = async (id) => {
     if(confirm("Deseja excluir?")) {
         await deleteDoc(doc(db, "lancamentos", id));
