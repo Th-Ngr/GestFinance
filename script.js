@@ -92,19 +92,19 @@ async function carregarLancamentos() {
     if (!auth.currentUser) return;
     
     const mesAtual = monthSelect.value;
-    
     const q = query(collection(db, "lancamentos"), 
               where("userId", "==", auth.currentUser.uid), 
               where("mes", "==", mesAtual));
 
     try {
         const snap = await getDocs(q);
-        
         let itensParaExibir = [];
+
         snap.forEach(d => {
             itensParaExibir.push({ id: d.id, ...d.data() });
         });
 
+        // Ordenação por data
         itensParaExibir.sort((a, b) => new Date(a.data) - new Date(b.data));
 
         let totE = 0; 
@@ -117,7 +117,6 @@ async function carregarLancamentos() {
 
         itensParaExibir.forEach(item => {
             const valorNumerico = parseFloat(item.valor) || 0;
-
             const row = `
                 <tr>
                     <td>${formatarData(item.data)}</td>
@@ -140,8 +139,9 @@ async function carregarLancamentos() {
                 totS += valorNumerico;
                 saidaBody.innerHTML += row;
             }
-        }); // <-- AQUI: Corrigido o fechamento do forEach
+        }); // <-- Fecha o forEach dos itens
 
+        // ATUALIZAÇÃO DOS CARDS
         document.getElementById("totalEntrada").innerText = totE.toFixed(2);
         document.getElementById("totalSaida").innerText = totS.toFixed(2);
         
@@ -152,16 +152,10 @@ async function carregarLancamentos() {
         const corFinal = lucroTotal >= 0 ? "#2ecc71" : "#e74c3c";
         elLucro.parentElement.style.color = corFinal;
 
-    } catch (error) { // <-- AQUI: Agora o try foi fechado e o catch funciona
+    } catch (error) { // <-- Fecha o TRY e abre o CATCH
         console.error("Erro ao carregar lançamentos:", error);
-    }
-} // <-- AQUI: Fecha a função corretamente
-window.deletar = async (id) => {
-    if(confirm("Deseja excluir?")) {
-        await deleteDoc(doc(db, "lancamentos", id));
-        carregarLancamentos();
-    }
-};
+    } // <-- Fecha o CATCH
+} // <-- Fecha a FUNÇÃO
 
 window.saveMeta = async () => {
     const meta = document.getElementById("metaInput").value;
