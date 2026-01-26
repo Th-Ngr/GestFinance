@@ -99,13 +99,19 @@ async function carregarLancamentos() {
     try {
         const snap = await getDocs(q);
         let itensParaExibir = [];
-
+        
         snap.forEach(d => {
             itensParaExibir.push({ id: d.id, ...d.data() });
         });
 
-        // Ordenação por data
-        itensParaExibir.sort((a, b) => new Date(a.data) - new Date(b.data));
+        // --- NOVA LÓGICA DE ORDENAÇÃO ROBUSTA ---
+        itensParaExibir.sort((a, b) => {
+            // Converte as datas para o formato que o JS entende (AAAA-MM-DD) antes de comparar
+            const dateA = new Date(a.data);
+            const dateB = new Date(b.data);
+            return dateA - dateB; // Ordem crescente (antigos primeiro)
+        });
+        // ----------------------------------------
 
         let totE = 0; 
         let totS = 0; 
@@ -139,9 +145,8 @@ async function carregarLancamentos() {
                 totS += valorNumerico;
                 saidaBody.innerHTML += row;
             }
-        }); // <-- Fecha o forEach dos itens
+        });
 
-        // ATUALIZAÇÃO DOS CARDS
         document.getElementById("totalEntrada").innerText = totE.toFixed(2);
         document.getElementById("totalSaida").innerText = totS.toFixed(2);
         
@@ -152,10 +157,10 @@ async function carregarLancamentos() {
         const corFinal = lucroTotal >= 0 ? "#2ecc71" : "#e74c3c";
         elLucro.parentElement.style.color = corFinal;
 
-    } catch (error) { // <-- Fecha o TRY e abre o CATCH
-        console.error("Erro ao carregar lançamentos:", error);
-    } // <-- Fecha o CATCH
-} // <-- Fecha a FUNÇÃO
+    } catch (error) {
+        console.error("Erro ao carregar e ordenar:", error);
+    }
+}
 
 window.saveMeta = async () => {
     const meta = document.getElementById("metaInput").value;
