@@ -156,3 +156,22 @@ td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
     .sidebar { width: 60px; }
     .content { margin-left: 60px; }
 }
+/* --- AJUSTE DE SEGURANÇA PARA ÍCONES --- */
+
+/* Se o Font Awesome carregar, ele usa o ícone. 
+   Se falhar, esses símbolos abaixo aparecem no lugar para o botão não ficar vazio. */
+.btn-edit i::before { 
+    content: "\f044"; /* Código do lápis no Font Awesome */
+    font-family: "Font Awesome 6 Free", sans-serif;
+}
+
+.btn-delete i::before { 
+    content: "\f2ed"; /* Código da lixeira no Font Awesome */
+    font-family: "Font Awesome 6 Free", sans-serif;
+}
+
+/* Fallback radical: se a fonte falhar 100%, usa símbolos de texto padrão */
+@font-face {
+    font-family: "Font Awesome 6 Free";
+    unicode-range: U+f044, U+f2ed;
+}
