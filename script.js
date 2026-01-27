@@ -104,20 +104,8 @@ async function carregarLancamentos() {
             itensParaExibir.push({ id: d.id, ...d.data() });
         });
 
-        // --- ORDENAÇÃO ULTRA ROBUSTA (A Prova de Erros) ---
-        itensParaExibir.sort((a, b) => {
-            // Se a data for YYYY-MM-DD, o new Date() funciona direto.
-            // Se for DD/MM/YYYY, precisamos tratar:
-            const formatar = (d) => {
-                if (d.includes('/')) {
-                    const [dia, mes, ano] = d.split('/');
-                    return new Date(ano, mes - 1, dia).getTime();
-                }
-                return new Date(d).getTime();
-            };
-            return formatar(a.data) - formatar(b.data);
-        });
-        // --------------------------------------------------
+        // 1. ORDENAÇÃO: Do menor dia para o maior (usando o formato do Firebase)
+        itensParaExibir.sort((a, b) => a.data.localeCompare(b.data));
 
         let totE = 0; 
         let totS = 0; 
@@ -129,9 +117,14 @@ async function carregarLancamentos() {
 
         itensParaExibir.forEach(item => {
             const valorNumerico = parseFloat(item.valor) || 0;
+
+            // 2. FORMATAÇÃO: Transforma AAAA-MM-DD em DD-MM-AAAA para a tabela
+            const [ano, mes, dia] = item.data.split("-");
+            const dataFormatadaBR = `${dia}-${mes}-${ano}`;
+
             const row = `
                 <tr>
-                    <td>${formatarData(item.data)}</td>
+                    <td>${dataFormatadaBR}</td> 
                     <td>${item.cliente || "-"}</td>
                     <td>${item.descricao || "-"}</td>
                     <td>R$ ${valorNumerico.toFixed(2)}</td>
@@ -153,18 +146,13 @@ async function carregarLancamentos() {
             }
         });
 
+        // Atualiza Totais
         document.getElementById("totalEntrada").innerText = totE.toFixed(2);
         document.getElementById("totalSaida").innerText = totS.toFixed(2);
-        
-        const lucroTotal = totE - totS;
-        const elLucro = document.getElementById("lucro");
-        elLucro.innerText = lucroTotal.toFixed(2);
-
-        const corFinal = lucroTotal >= 0 ? "#2ecc71" : "#e74c3c";
-        elLucro.parentElement.style.color = corFinal;
+        document.getElementById("lucro").innerText = (totE - totS).toFixed(2);
 
     } catch (error) {
-        console.error("Erro fatal na ordenação:", error);
+        console.error("Erro na listagem:", error);
     }
 }
 
