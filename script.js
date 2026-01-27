@@ -524,3 +524,6 @@ window.salvarEdicao = async () => {
         carregarLancamentos(); // Recarrega a lista
     } catch (e) { console.error("Erro ao salvar:", e); }
 };
+// Expondo as funções para o mundo externo (HTML)
+window.deletar = deletar;
+window.prepararEdicao = prepararEdicao;
