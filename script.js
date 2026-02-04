@@ -300,7 +300,7 @@ window.pdf = {
         docPDF.text("Assinatura do responsável: __________________________________________", 15, y);
 
         docPDF.save(`Relatorio_Financeiro_${mes}.pdf`);
-    };
+    }
 
     anual: async () => {
         const { jsPDF } = window.jspdf;
@@ -410,10 +410,9 @@ window.pdf = {
             console.error("Erro ao gerar PDF Anual:", error);
             alert("Erro ao gerar PDF. Verifique o console.");
         }
-    }
-};
+},
 // Variável global para saber se estamos editando
-let editId = null;
+let editId = null,
 
 // 1. Função para carregar os dados no formulário
 window.prepararEdicao = async (id) => {
@@ -446,7 +445,7 @@ window.prepararEdicao = async (id) => {
     } catch (e) {
         console.error("Erro ao carregar edição:", e);
     }
-};
+},
 
 // 2. Modificar a função addLancamento para suportar atualização
 window.addLancamento = async () => {
@@ -488,7 +487,7 @@ window.addLancamento = async () => {
     } catch (e) {
         console.error("Erro:", e);
     }
-};
+},
 
 function limparFormulario() {
     document.getElementById("data").value = "";
