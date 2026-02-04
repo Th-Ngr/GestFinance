@@ -205,7 +205,12 @@ window.pdf = {
                 totalS += item.valor;
             }
         });
+        // ORDENAÇÃO DAS ENTRADAS (Mais recente para antiga)
+        entradas.sort((a, b) => new Date(b.data) - new Date(a.data));
 
+        // ORDENAÇÃO DAS SAÍDAS (Mais recente para antiga)
+        saidas.sort((a, b) => new Date(b.data) - new Date(a.data));
+        
         let y = 20;
 
         // Título 
