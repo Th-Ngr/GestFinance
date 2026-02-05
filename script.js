@@ -11,6 +11,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const btnAbrir = document.getElementById('btnRegister');
+const modal = document.getElementById('modalCadastro');
+
 
 window.db = db;
 window.getDocs = getDocs;
@@ -21,14 +24,17 @@ const authSection = document.getElementById("auth");
 const appSection = document.getElementById("app");
 const monthSelect = document.getElementById("monthSelect");
 
-// --- AUTENTICAÇÃO ---
-document.getElementById("btnRegister").addEventListener("click", async () => {
-    const email = document.getElementById("email").value;
-    const pass = document.getElementById("password").value;
-    try {
-        await createUserWithEmailAndPassword(auth, email, pass);
-    } catch (e) { alert("Erro ao cadastrar: " + e.message); }
+// --- CONTROLE DO MODAL DE CADASTRO ---
+// 1. Abrir o modal ao clicar no botão de cadastro da tela inicial
+document.getElementById("btnRegister").addEventListener("click", (e) => {
+    e.preventDefault(); // Impede o comportamento padrão
+    modal.style.display = "flex"; // Abre o seu modal novo
 });
+
+// 2. Fechar o modal (adicione o ID 'btnFechar' no seu 'X' lá no HTML)
+document.getElementById("btnFechar").onclick = () => {
+    modal.style.display = "none";
+};
 
 document.getElementById("btnLogin").addEventListener("click", async () => {
     const email = document.getElementById("email").value;
@@ -525,4 +531,33 @@ window.salvarEdicao = async () => {
         fecharModal();
         carregarLancamentos(); // Recarrega a lista
     } catch (e) { console.error("Erro ao salvar:", e); }
+};
+window.finalizarCadastroCompleto = async () => {
+    // Capturando dados dos campos do seu MODAL
+    const email = document.getElementById("regEmail").value;
+    const pass = document.getElementById("regPassword").value;
+    const nome = document.getElementById("regNome").value;
+    const empresa = document.getElementById("regEmpresa").value;
+    const telefone = document.getElementById("regTelefone").value;
+
+    try {
+        // A. Cria o usuário no Auth
+        const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+        const user = userCredential.user;
+
+        // B. Salva os dados extras no Firestore
+        await setDoc(doc(db, "usuarios", user.uid), {
+            nome: nome,
+            empresa: empresa,
+            telefone: telefone,
+            email: email,
+            tipo: "cliente",
+            dataCadastro: new Date()
+        });
+
+        alert("Usuário e Empresa cadastrados com sucesso! 🎉");
+        modal.style.display = "none";
+    } catch (e) {
+        alert("Erro no cadastro completo: " + e.message);
+    }
 };
