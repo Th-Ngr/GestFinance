@@ -12,224 +12,107 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-window.db = db;
-window.getDocs = getDocs;
-window.collection = collection;
-
-// ELEMENTOS DE TELA
-const authSection = document.getElementById("auth");
-const appSection = document.getElementById("app");
-const monthSelect = document.getElementById("monthSelect");
-const btnAbrirModal = document.getElementById('btnRegister');
-const modal = document.getElementById('modalCadastro');
-const btnFechar = document.getElementById('btnFechar');
-const formCadastro = document.getElementById('formCadastroFirebase');
-
-// --- AUTENTICAÇÃO ---
-// Agora ele apenas abre a janela de cadastro
-btnAbrirModal.onclick = (e) => {
-    e.preventDefault(); 
-    modal.style.display = 'flex';
-};
-
-// E aproveitamos para incluir o fechamento
-btnFechar.onclick = () => modal.style.display = 'none';
-formCadastro.addEventListener('submit', async (e) => {
-    e.preventDefault(); 
-
-    /// --- LÓGICA DE CADASTRO NO MODAL ---
-formCadastro.addEventListener('submit', async (e) => {
-    e.preventDefault(); 
-
-    // 1. Captura os valores dos inputs do modal
-    const nome = document.getElementById('regNome').value;
-    const empresa = document.getElementById('regEmpresa').value;
-    const telefone = document.getElementById('regTelefone').value;
-    const email = document.getElementById('regEmail').value;
-    const senha = document.getElementById('regSenha').value;
-
-    try {
-        // 2. Cria o usuário no Firebase Auth
-        const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
-        const user = userCredential.user;
-
-        // 3. Salva os dados extras no Firestore
-        await setDoc(doc(db, "usuarios", user.uid), {
-            nome: nome,
-            empresa: empresa,
-            telefone: telefone,
-            email: email,
-            dataCadastro: new Date()
-        });
-
-        // --- O PULO DO GATO ---
-        alert("Conta criada com sucesso! 🎉");
-        
-        // 4. Limpa o formulário e fecha o modal
-        formCadastro.reset();
-        modal.style.display = 'none'; // Fecha o modal de cadastro
-        
-        // O onAuthStateChanged (que você já tem no código) 
-        // vai detectar o novo login e mostrar a tela principal automaticamente!
-        
-    } catch (error) {
-        console.error("Erro no cadastro:", error);
-        alert("Erro ao cadastrar: " + error.message);
-    }
-});
-});
-
-window.onclick = (event) => {
-    if (event.target == modal) modal.style.display = 'none';
-};
-
-document.getElementById("btnLogin").addEventListener("click", async () => {
-    const email = document.getElementById("email").value;
-    const pass = document.getElementById("password").value;
-    try {
-        await signInWithEmailAndPassword(auth, email, pass);
-    } catch (e) { alert("Erro ao entrar: " + e.message); }
-});
-
-window.logout = () => signOut(auth);
-
-onAuthStateChanged(auth, user => {
-    if (user) {
-        authSection.style.display = "none";
-        appSection.style.display = "block";
-        carregarDadosIniciais();
-    } else {
-        authSection.style.display = "flex";
-        appSection.style.display = "none";
-    }
-});
-
-// --- LÓGICA DE NEGÓCIO ---
+let processandoAtualmente = false;
+let editId = null;
 const months = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
-function carregarDadosIniciais() {
-    monthSelect.innerHTML = "";
-    months.forEach(m => {
-        const opt = document.createElement("option");
-        opt.value = m; opt.textContent = m;
-        monthSelect.appendChild(opt);
-    });
-    monthSelect.value = months[new Date().getMonth()];
-    carregarLancamentos();
+// --- ELEMENTOS ---
+const monthSelect = document.getElementById("monthSelect");
+const conteudoPrincipal = document.getElementById('tela-lancamentos');
+const perfilSection = document.getElementById('perfilSection');
+
+// --- AUXILIARES ---
+function gerarIdUnico(userId, cotaId, mes, ano) {
+    const stringPura = `${userId}_${cotaId}_${mes}_${ano}`;
+    return stringPura.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '');
 }
 
-monthSelect.addEventListener("change", carregarLancamentos);
+function formatarData(dataISO) {
+    if (!dataISO) return "-";
+    const p = dataISO.split("-");
+    return p.length === 3 ? `${p[2]}-${p[1]}-${p[0]}` : dataISO;
+}
 
-window.addLancamento = async () => {
-    const dados = {
-        userId: auth.currentUser.uid,
-        mes: monthSelect.value,
-        data: document.getElementById("data").value,
-        cliente: document.getElementById("cliente").value,
-        descricao: document.getElementById("descricao").value,
-        valor: parseFloat(document.getElementById("valor").value) || 0,
-        tipo: document.getElementById("tipo").value,
-        pagamento: document.getElementById("pagamento").value,
-        status: document.getElementById("status").value,
-        ajudante: parseFloat(document.getElementById("ajudante").value) || 0
-    };
+// --- AUTOMAÇÃO CONTRA DUPLICIDADE ---
+async function processarCotasFixas(userId) {
+    if (processandoAtualmente) return;
+    processandoAtualmente = true;
+    const mesTexto = monthSelect.value;
+    const anoAtual = new Date().getFullYear();
 
     try {
-        await addDoc(collection(db, "lancamentos"), dados);
-        carregarLancamentos();
-        alert("Lançamento adicionado!");
-    } catch (e) { console.error(e); }
-};
+        const qFixas = query(collection(db, "cotas_fixas"), where("userId", "==", userId));
+        const snapFixas = await getDocs(qFixas);
 
+        for (const docCota of snapFixas.docs) {
+            const cota = docCota.data();
+            const idUnicoMes = gerarIdUnico(userId, docCota.id, mesTexto, anoAtual);
+            const docRef = doc(db, "lancamentos", idUnicoMes);
+            
+            const checkDoc = await getDoc(docRef);
+            if (!checkDoc.exists()) {
+                const mesIndex = months.indexOf(mesTexto);
+                await setDoc(docRef, {
+                    userId, mes: mesTexto,
+                    data: `${anoAtual}-${String(mesIndex + 1).padStart(2, '0')}-01`,
+                    cliente: cota.cliente || "Cota Fixa",
+                    descricao: cota.descricao,
+                    valor: parseFloat(cota.valor) || 0,
+                    tipo: cota.tipo,
+                    pagamento: cota.pagamento || "Mensal",
+                    status: "Pendente",
+                    ajudante: parseFloat(cota.ajudante) || 0,
+                    isFixaGerada: true,
+                    cotaIdOriginal: docCota.id
+                });
+            }
+        }
+        await carregarLancamentos();
+    } finally { processandoAtualmente = false; }
+}
+
+// --- CARREGAR DADOS ---
 async function carregarLancamentos() {
     if (!auth.currentUser) return;
+    const q = query(collection(db, "lancamentos"), where("userId", "==", auth.currentUser.uid), where("mes", "==", monthSelect.value));
+    const snap = await getDocs(q);
     
-    const mesAtual = monthSelect.value;
-    const q = query(collection(db, "lancamentos"), 
-              where("userId", "==", auth.currentUser.uid), 
-              where("mes", "==", mesAtual));
+    const entradaBody = document.getElementById("entradaBody");
+    const saidaBody = document.getElementById("saidaBody");
+    entradaBody.innerHTML = ""; saidaBody.innerHTML = "";
+    
+    let totE = 0, totS = 0;
+    snap.forEach(d => {
+        const item = d.data();
+        const v = parseFloat(item.valor) || 0;
+        const iconeFixa = item.isFixaGerada ? ' <i class="fa-solid fa-thumbtack" style="color:#20B2AA"></i>' : '';
+        const row = `<tr>
+            <td>${formatarData(item.data)}</td>
+            <td>${item.cliente || "-"}</td>
+            <td>${item.descricao}${iconeFixa}</td>
+            <td>R$ ${v.toFixed(2)}</td>
+            <td>R$ ${Number(item.ajudante || 0).toFixed(2)}</td>
+            <td>${item.pagamento}</td>
+            <td><span class="status-${item.status.toLowerCase().replace(" ","-")}">${item.status}</span></td>
+            <td>
+                <button class="btn-edit" onclick="prepararEdicao('${d.id}')"><i class="fa-solid fa-pen-to-square"></i></button>
+                <button class="btn-delete" onclick="deletar('${d.id}')"><i class="fa-solid fa-trash"></i></button>
+            </td>
+        </tr>`;
+        if (item.tipo === "entrada") { totE += v; entradaBody.innerHTML += row; }
+        else { totS += v; saidaBody.innerHTML += row; }
+    });
 
-    try {
-        const snap = await getDocs(q);
-        let totE = 0;
-        let totS = 0;
-
-        const entradaBody = document.getElementById("entradaBody");
-        const saidaBody = document.getElementById("saidaBody");
-        entradaBody.innerHTML = "";
-        saidaBody.innerHTML = "";
-
-        // --- MUDANÇA AQUI: Transformar em Array e Ordenar ---
-        const listaOrdenada = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        
-        // Ordena da data mais recente para a mais antiga
-        listaOrdenada.sort((a, b) => {
-            return new Date(b.data) - new Date(a.data);
-        });
-
-        // Agora percorremos a lista já organizada
-        listaOrdenada.forEach(item => {
-            const valorNumerico = parseFloat(item.valor) || 0;
-
-            const row = `
-                <tr>
-                    <td>${formatarData(item.data)}</td>
-                    <td>${item.cliente || "-"}</td>
-                    <td>${item.descricao || "-"}</td>
-                    <td>R$ ${valorNumerico.toFixed(2)}</td>
-                    <td>R$ ${Number(item.ajudante || 0).toFixed(2)}</td>
-                    <td>${item.pagamento || "-"}</td>
-                    <td><span class="status-${item.status.toLowerCase().replace(" ", "-")}">${item.status}</span></td>
-                    <td>
-                        <button class="btn-edit" onclick="prepararEdicao('${item.id}')"><i class="fa-solid fa-pen-to-square"></i></button>
-                        <button class="btn-delete" onclick="deletar('${item.id}')"><i class="fa-solid fa-trash"></i></button>
-                    </td>
-                </tr>`;
-
-            if (item.tipo === "entrada") {
-                totE += valorNumerico;
-                entradaBody.innerHTML += row;
-            } else {
-                totS += valorNumerico;
-                saidaBody.innerHTML += row;
-            }
-        });
-        // ATUALIZAÇÃO DOS CARDS (Fora do loop forEach)
-        // .innerText para garantir que o valor apareça no <span> correto
-        document.getElementById("totalEntrada").innerText = totE.toFixed(2);
-        document.getElementById("totalSaida").innerText = totS.toFixed(2);
-        
-        const lucroTotal = totE - totS;
-        const elLucro = document.getElementById("lucro");
-        elLucro.innerText = lucroTotal.toFixed(2);
-
-        // Ajuste de cor automático do Lucro
-        const corLucro = lucroTotal >= 0 ? "#2ecc71" : "#e74c3c";
-        elLucro.parentElement.style.color = corLucro;
-
-    } catch (error) {
-        console.error("Erro ao somar cards:", error);
-    }
+    // CORES DO LUCRO (RESTAURADO)
+    const lucro = totE - totS;
+    document.getElementById("totalEntrada").innerText = totE.toFixed(2);
+    document.getElementById("totalSaida").innerText = totS.toFixed(2);
+    const elLucro = document.getElementById("lucro");
+    elLucro.innerText = lucro.toFixed(2);
+    elLucro.parentElement.style.color = lucro >= 0 ? "#2ecc71" : "#e74c3c";
 }
 
-window.deletar = async (id) => {
-    if(confirm("Deseja excluir?")) {
-        await deleteDoc(doc(db, "lancamentos", id));
-        carregarLancamentos();
-    }
-};
-
-window.saveMeta = async () => {
-    const meta = document.getElementById("metaInput").value;
-    await setDoc(doc(db, "metas", auth.currentUser.uid + "_" + monthSelect.value), {
-        valor: parseFloat(meta),
-        mes: monthSelect.value,
-        userId: auth.currentUser.uid
-    });
-    alert("Meta salva!");
-};
-
-// --- PDF (MENSAL E ANUAL) ---
+// --- PDF (RESTAURADO COMPLETO) ---
 window.pdf = {
     mensal: async () => {
         const { jsPDF } = window.jspdf;
@@ -417,113 +300,112 @@ window.pdf = {
         } catch (error) { console.error("Erro PDF Anual:", error); }
     }
 };
-// Variável global para saber se estamos editando
-let editId = null;
 
-// 1. Função para carregar os dados no formulário
-window.prepararEdicao = async (id) => {
-    try {
-        const docRef = doc(db, "lancamentos", id);
-        const docSnap = await getDoc(docRef);
 
-        if (docSnap.exists()) {
-            const dados = docSnap.data();
-            editId = id; // Armazena o ID que estamos editando
-
-            // Preenche os campos do formulário
-            document.getElementById("data").value = dados.data;
-            document.getElementById("cliente").value = dados.cliente;
-            document.getElementById("descricao").value = dados.descricao;
-            document.getElementById("valor").value = dados.valor;
-            document.getElementById("tipo").value = dados.tipo;
-            document.getElementById("pagamento").value = dados.pagamento;
-            document.getElementById("status").value = dados.status;
-            document.getElementById("ajudante").value = dados.ajudante;
-
-            // Muda o texto do botão para "Atualizar"
-            const btnAdd = document.querySelector(".form button");
-            btnAdd.textContent = "Atualizar Lançamento";
-            btnAdd.style.background = "#f39c12"; // Cor de alerta/edição
-
-            // Rola a página para o topo (formulário)
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    } catch (e) {
-        console.error("Erro ao carregar edição:", e);
-    }
-};
-
-// 2. Modificar a função addLancamento para suportar atualização
-window.addLancamento = async () => {
-    try {
-        if (!auth.currentUser) return alert("Sessão expirada!");
-
-        const dados = {
-            userId: auth.currentUser.uid,
-            mes: monthSelect.value,
-            data: document.getElementById("data").value,
-            cliente: document.getElementById("cliente").value,
-            descricao: document.getElementById("descricao").value,
-            valor: parseFloat(document.getElementById("valor").value) || 0,
-            tipo: document.getElementById("tipo").value,
-            pagamento: document.getElementById("pagamento").value,
-            status: document.getElementById("status").value,
-            ajudante: parseFloat(document.getElementById("ajudante").value) || 0
-        };
-
-        if (editId) {
-            // Se houver editId, estamos ATUALIZANDO
-            await setDoc(doc(db, "lancamentos", editId), dados);
-            alert("Lançamento atualizado com sucesso!");
-            editId = null; // Reseta o estado de edição
-            
-            // Restaura o botão original
-            const btnAdd = document.querySelector(".form button");
-            btnAdd.textContent = "Adicionar";
-            btnAdd.style.background = ""; 
-        } else {
-            // Se não houver editId, estamos CRIANDO NOVO
-            await addDoc(collection(db, "lancamentos"), dados);
-            alert("Lançamento adicionado!");
-        }
-
-        // Limpa o formulário e recarrega a tabela
-        limparFormulario();
+// --- NAVEGAÇÃO SPA ---
+window.navegar = async (pagina) => {
+    const navHome = document.getElementById("nav-home");
+    const navConfig = document.getElementById("btnConfiguracoes");
+    if (pagina === 'perfil') {
+        conteudoPrincipal.style.display = 'none';
+        perfilSection.style.display = 'block';
+        navConfig.classList.add("active");
+        if(navHome) navHome.classList.remove("active");
+        carregarDadosPerfil();
+        carregarGestaoFixas();
+    } else {
+        perfilSection.style.display = 'none';
+        conteudoPrincipal.style.display = 'block';
+        navConfig.classList.remove("active");
+        if(navHome) navHome.classList.add("active");
         carregarLancamentos();
-    } catch (e) {
-        console.error("Erro:", e);
     }
-},
-
-function limparFormulario() {
-    document.getElementById("data").value = "";
-    document.getElementById("cliente").value = "";
-    document.getElementById("descricao").value = "";
-    document.getElementById("valor").value = "";
-    document.getElementById("ajudante").value = "";
-}
-function formatarData(dataISO) {
-    if (!dataISO || dataISO === "") return "-";
-    const partes = dataISO.split("-");
-    
-    // Se a data não tiver 3 partes (ano, mes, dia), retorna ela mesma
-    if (partes.length !== 3) return dataISO;
-    
-    const [ano, mes, dia] = partes;
-    return `${dia}-${mes}-${ano}`;
 };
 
-// Use formatarData(item.data) na hora de criar a linha da tabela
-function abrirEdicao(id) {
-    const modal = document.getElementById('editModal');
-    modal.style.display = 'block';
-    // Aqui você deve buscar os dados do item pelo ID e preencher o formulário do modal
+// --- INICIALIZAÇÃO ---
+onAuthStateChanged(auth, user => {
+    if (user) {
+        document.getElementById("auth").style.display = "none";
+        document.getElementById("app").style.display = "block";
+        monthSelect.innerHTML = "";
+        months.forEach(m => {
+            const opt = document.createElement("option");
+            opt.value = m; opt.textContent = m;
+            monthSelect.appendChild(opt);
+        });
+        monthSelect.value = months[new Date().getMonth()];
+        processarCotasFixas(user.uid);
+    } else {
+        document.getElementById("auth").style.display = "flex";
+        document.getElementById("app").style.display = "none";
+    }
+});
+
+monthSelect.addEventListener("change", () => {
+    if (auth.currentUser) {
+        carregarLancamentos();
+        processarCotasFixas(auth.currentUser.uid);
+    }
+});
+
+// Botão Adicionar
+window.addLancamento = async () => {
+    if (!auth.currentUser) return;
+    const isFixa = document.getElementById("isFixa").checked;
+    const dados = {
+        userId: auth.currentUser.uid,
+        mes: monthSelect.value,
+        data: document.getElementById("data").value,
+        cliente: document.getElementById("cliente").value,
+        descricao: document.getElementById("descricao").value,
+        valor: parseFloat(document.getElementById("valor").value) || 0,
+        tipo: document.getElementById("tipo").value,
+        pagamento: document.getElementById("pagamento").value,
+        status: document.getElementById("status").value,
+        ajudante: parseFloat(document.getElementById("ajudante").value) || 0
+    };
+
+    if (isFixa) {
+        const cotaRef = await addDoc(collection(db, "cotas_fixas"), dados);
+        const idFixo = gerarIdUnico(auth.currentUser.uid, cotaRef.id, monthSelect.value, new Date().getFullYear());
+        await setDoc(doc(db, "lancamentos", idFixo), { ...dados, isFixaGerada: true, cotaIdOriginal: cotaRef.id });
+    } else {
+        await addDoc(collection(db, "lancamentos"), { ...dados, isFixaGerada: false });
+    }
+    carregarLancamentos();
+};
+
+window.logout = () => signOut(auth);
+window.deletar = async (id) => { if(confirm("Excluir?")) { await deleteDoc(doc(db, "lancamentos", id)); carregarLancamentos(); } };
+
+// Funções de Perfil
+async function carregarDadosPerfil() {
+    const d = await getDoc(doc(db, "usuarios", auth.currentUser.uid));
+    if(d.exists()){
+        document.getElementById("perfilNome").innerText = d.data().nome;
+        document.getElementById("perfilEmail").innerText = auth.currentUser.email;
+    }
 }
 
-function closeModal() {
-    document.getElementById('editModal').style.display = 'none';
+async function carregarGestaoFixas() {
+    const container = document.getElementById("listaFixasGerenciamento");
+    const q = query(collection(db, "cotas_fixas"), where("userId", "==", auth.currentUser.uid));
+    const snap = await getDocs(q);
+    container.innerHTML = "";
+    snap.forEach(d => {
+        container.innerHTML += `<div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #eee;">
+            <span>${d.data().descricao}</span>
+            <button onclick="removerCotaFixa('${d.id}')" style="color:red; border:none; background:none;">Excluir</button>
+        </div>`;
+    });
 }
 
+window.removerCotaFixa = async (id) => { 
+    if(confirm("Remover molde?")) { 
+        await deleteDoc(doc(db, "cotas_fixas", id)); carregarGestaoFixas(); } };
+// --- FUNÇÕES GLOBAIS PARA A TABELA ---
+
+// 1. Preparar Edição (Torna global para o onclick do botão)
 window.prepararEdicao = async (id) => {
     try {
         const docRef = doc(db, "lancamentos", id);
@@ -531,34 +413,44 @@ window.prepararEdicao = async (id) => {
 
         if (docSnap.exists()) {
             const dados = docSnap.data();
-            editId = id; // Guarda o ID globalmente
+            editId = id; // Guarda o ID para o salvamento saber quem editar
 
-            // Preenche os campos do MODAL
-            document.getElementById("editData").value = dados.data;
-            document.getElementById("editCliente").value = dados.cliente;
-            document.getElementById("editDescricao").value = dados.descricao;
-            document.getElementById("editValor").value = dados.valor;
-            document.getElementById("editTipo").value = dados.tipo;
-            document.getElementById("editPagamento").value = dados.pagamento;
-            document.getElementById("editStatus").value = dados.status;
-            document.getElementById("editAjudante").value = dados.ajudante;
+            // Preenche os campos do modal de edição
+            document.getElementById("editData").value = dados.data || "";
+            document.getElementById("editCliente").value = dados.cliente || "";
+            document.getElementById("editDescricao").value = dados.descricao || "";
+            document.getElementById("editValor").value = dados.valor || 0;
+            document.getElementById("editTipo").value = dados.tipo || "entrada";
+            document.getElementById("editPagamento").value = dados.pagamento || "";
+            document.getElementById("editStatus").value = dados.status || "";
+            document.getElementById("editAjudante").value = dados.ajudante || 0;
 
-            // Mostra o modal
-            document.getElementById("editModal").style.display = "block";
+            // Abre o modal
+            const modalEdicao = document.getElementById("editModal");
+            if (modalEdicao) modalEdicao.style.display = "block";
         }
-    } catch (e) { console.error("Erro ao carregar edição:", e); }
+    } catch (e) { 
+        console.error("Erro ao carregar edição:", e); 
+    }
 };
 
-window.fecharModal = () => {
-    document.getElementById("editModal").style.display = "none";
-    editId = null;
+// 2. Deletar (Torna global para o onclick do botão)
+window.deletar = async (id) => {
+    if (confirm("Deseja realmente excluir este registro?")) {
+        try {
+            await deleteDoc(doc(db, "lancamentos", id));
+            carregarLancamentos(); // Atualiza a tabela após deletar
+        } catch (e) {
+            console.error("Erro ao deletar:", e);
+        }
+    }
 };
 
-// Função para salvar o que foi editado no Modal
+// 3. Salvar Edição (Torna global para o botão dentro do modal)
 window.salvarEdicao = async () => {
     if (!editId) return;
 
-    const dados = {
+    const dadosAtualizados = {
         userId: auth.currentUser.uid,
         mes: monthSelect.value,
         data: document.getElementById("editData").value,
@@ -572,31 +464,18 @@ window.salvarEdicao = async () => {
     };
 
     try {
-        await setDoc(doc(db, "lancamentos", editId), dados);
-        alert("Atualizado com sucesso!");
-        fecharModal();
-        carregarLancamentos(); // Recarrega a lista
-    } catch (e) { console.error("Erro ao salvar:", e); }
-};
-// Declarar os elementos
-const btnConfiguracoes = document.getElementById('btnConfiguracoes');
-const conteudoPrincipal = document.getElementById('conteudoPrincipal');
-const perfilSection = document.getElementById('perfilSection');
-
-// Evento de clique na engrenagem
-btnConfiguracoes.onclick = () => {
-    // 1. Esconde a parte das tabelas e entradas
-    conteudoPrincipal.style.display = 'none';
-    
-    // 2. Mostra a tela de perfil
-    perfilSection.style.display = 'block';
-    
-    // 3. Carrega os dados do Firebase para preencher os campos
-    carregarDadosPerfil(); 
+        await setDoc(doc(db, "lancamentos", editId), dadosAtualizados, { merge: true });
+        alert("Alterações salvas!");
+        window.fecharModal(); 
+        carregarLancamentos();
+    } catch (e) { 
+        console.error("Erro ao salvar:", e);
+    }
 };
 
-// Função para voltar para a tela principal (adicione um botão "Voltar" no perfil)
-function voltarParaPrincipal() {
-    perfilSection.style.display = 'none';
-    conteudoPrincipal.style.display = 'block';
-}
+// 4. Fechar Modal
+window.fecharModal = () => {
+    const modalEdicao = document.getElementById("editModal");
+    if (modalEdicao) modalEdicao.style.display = "none";
+    editId = null;
+};

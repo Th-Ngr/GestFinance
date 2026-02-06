@@ -4,253 +4,222 @@
     <meta charset="UTF-8">
     <title>Gest Financial</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/x-icon" href="favicon.png">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
-<div id="modalCadastro" class="modal-bg">
-  <div class="modal-content">
-    <span id="btnFechar" class="close-btn">&times;</span>
-    <h2>Novo Cadastro</h2>
-    <hr>
-    
-    <form id="formCadastroFirebase">
-      <input type="text" id="regNome" placeholder="Seu nome" required>
-      <input type="text" id="regEmpresa" placeholder="Nome da empresa" required>
-      <input type="tel" id="regTelefone" placeholder="Telefone (WhatsApp)">
-      <input type="email" id="regEmail" placeholder="E-mail" required>
-      <input type="password" id="regSenha" placeholder="Senha" required>
-      
-      <button type="submit" class="btn-finalizar">Finalizar Cadastro</button>
-    </form>
-  </div>
-</div>
-<div class="main-wrapper">
-    <div id="back">     
-        <section id="auth" class="auth-card" >
-        <h1>Gest Financial</h1>
-        <div class="auth-card-content">
-            <h2>Acesso ao sistema</h2>
-            <input type="email" id="email" placeholder="Email">
-            <input type="password" id="password" placeholder="Senha">
-            <button id="btnLogin">Entrar</button>
-            <button id="btnRegister">Cadastrar</button>
-    </div>
-</section>
-    </div>  
-    <nav class="sidebar">
-        <div class="logo">
-           <img id="apr" src="financeiro.png" alt="Logo" class="logo-img">
+    <div id="modalCadastro" class="modal-bg">
+        <div class="modal-content">
+            <span id="btnFechar" class="close-btn">&times;</span>
+            <h2>Novo Cadastro</h2>
+            <hr>
+            <form id="formCadastroFirebase">
+                <input type="text" id="regNome" placeholder="Seu nome" required>
+                <input type="text" id="regEmpresa" placeholder="Nome da empresa" required>
+                <input type="tel" id="regTelefone" placeholder="Telefone (WhatsApp)">
+                <input type="email" id="regEmail" placeholder="E-mail" required>
+                <input type="password" id="regSenha" placeholder="Senha" required>
+                <button type="submit" class="btn-finalizar">Finalizar Cadastro</button>
+            </form>
         </div>
-        <ul>
-            <li class="active"><i class="fa-solid fa-house"></i></li>
-            <li><i class="fa-solid fa-chart-line"></i></li>
-            <li><i class="fa-solid fa-star"></i></li>
-            <li><i class="fa-solid fa-gear"></i></li>
-        </ul>
-        <button id="btnLogoutTop" onclick="logout()" class="logout-btn">
-            <i class="fa-solid fa-right-from-bracket"></i>
-        </button>
-    </nav>
+    </div>
 
-    <main class="content">
-    
-     <section id="app" style="display:none;">
-            <header class="dashboard-header">
-                <div class="month-controls">
-                    <select id="monthSelect"></select>
+    <div id="back">
+        <section id="auth" class="auth-card">
+            <h1>Gest Financial</h1>
+            <div class="auth-card-content">
+                <h2>Acesso ao sistema</h2>
+                <input type="email" id="email" placeholder="Email">
+                <input type="password" id="password" placeholder="Senha">
+                <button id="btnLogin">Entrar</button>
+                <button id="btnRegister">Cadastrar</button>
+            </div>
+        </section>
+    </div>
+
+    <div class="main-wrapper" id="app" style="display:none;">
+        <nav class="sidebar">
+            <div class="logo">
+                <img id="apr" src="financeiro.png" alt="Logo" class="logo-img">
+            </div>
+            <ul>
+                <li class="active" onclick="navegar('home')" id="nav-home">
+                    <i class="fa-solid fa-house"></i>
+                </li>
+                <li><i class="fa-solid fa-chart-line"></i></li>
+                <li><i class="fa-solid fa-star"></i></li>
+                <li class="none" id="btnConfiguracoes" onclick="navegar('perfil')">
+                    <i class="fa-solid fa-gear"></i>
+                </li>
+            </ul>
+            <button id="btnLogoutTop" onclick="logout()" class="logout-btn">
+                <i class="fa-solid fa-right-from-bracket"></i>
+            </button>
+        </nav>
+
+        <main class="content">
+            <div id="tela-lancamentos">
+                <header class="dashboard-header">
+                    <div class="month-controls">
+                        <select id="monthSelect"></select>
+                    </div>
+                    <div class="meta-section">
+                        <div class="meta-info">
+                            <span>Meta Mensal</span>
+                            <input type="number" id="metaInput" placeholder="R$">
+                            <button onclick="saveMeta()" class="btn-save-meta"><i class="fa-solid fa-floppy-disk"></i></button>
+                        </div>
+                        <div class="progress-container">
+                            <div class="progress-bar" id="metaProgress" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                    <div class="export-buttons">
+                        <button onclick="pdf.mensal()"><i class="fa-solid fa-file-pdf"></i> Mensal</button>
+                        <button onclick="pdf.anual()"><i class="fa-solid fa-file-pdf"></i> Anual</button>
+                    </div>
+                </header>
+
+                <section class="summary">
+                    <div class="card">
+                        <div class="card-icon blue"><i class="fa-solid fa-wallet"></i></div>
+                        <div>
+                            <p>Faturamento</p>
+                            <h3>R$ <span id="totalEntrada">0.00</span></h3>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon red"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+                        <div>
+                            <p>Despesas</p>
+                            <h3>R$ <span id="totalSaida">0.00</span></h3>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon green"><i class="fa-solid fa-chart-pie"></i></div>
+                        <div>
+                            <p>Lucro Líquido</p>
+                            <h3>R$ <span id="lucro">0.00</span></h3>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="grid-layout">
+                    <section class="form-section card">
+                        <h2 class="form-title">Novo Lançamento</h2>
+                        <div class="form-grid">
+                            <label>Data</label><input type="date" id="data">
+                            <label>Cliente</label><input type="text" id="cliente" placeholder="Origem">
+                            <label>Descrição</label><input type="text" id="descricao" placeholder="O que é?">
+                            <label>Valor</label><input type="number" id="valor" placeholder="0.00">
+                            <div class="inline-group">
+                                <label>Tipo</label>
+                                <select id="tipo">
+                                    <option value="entrada">Entrada</option>
+                                    <option value="saida">Saída</option>
+                                </select>
+                            </div>
+                            <label class="form-check">
+                                <input type="checkbox" id="isFixa"> 
+                                <span>Conta Fixa (Repetir mensalmente)</span>
+                            </label>
+                            <label>Pagamento</label>
+                            <select id="pagamento">
+                                <option value="Pix">Pix</option>
+                                <option value="Dinheiro">Dinheiro</option>
+                                <option value="Débito">Débito</option>
+                                <option value="Crédito">Crédito</option>
+                            </select>
+                            <label>Status</label>
+                            <select id="status">
+                                <option value="Pago">Pago</option>
+                                <option value="A pagar">A pagar</option>
+                            </select>
+                            <label>Ajudante</label><input type="number" id="ajudante" placeholder="Custo">
+                            <button onclick="addLancamento()" class="btn-add">Adicionar</button>
+                        </div>
+                    </section>
+
+                    <div class="tables-container">
+                        <div class="card table-card">
+                            <h2 class="sticky-title">Entradas</h2>
+                            <div class="table-wrapper"><table id="tabelaEntradas">
+                                <thead><tr><th>Data</th><th>Cliente</th><th>Descrição</th><th>Valor</th><th>Ajudante</th><th>Pgto</th><th>Status</th><th>Ação</th></tr></thead>
+                                <tbody id="entradaBody"></tbody>
+                            </table></div>
+                        </div>
+                        <div class="card table-card">
+                            <h2 class="sticky-title">Saídas</h2>
+                            <div class="table-wrapper"><table id="tabelaSaidas">
+                                <thead><tr><th>Data</th><th>Cliente</th><th>Descrição</th><th>Valor</th><th>Ajudante</th><th>Pgto</th><th>Status</th><th>Ação</th></tr></thead>
+                                <tbody id="saidaBody"></tbody>
+                            </table></div>
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="meta-section">
-                    <div class="meta-info">
-                        <span>Meta Mensal</span>
-                        <input type="number" id="metaInput" placeholder="R$">
-                        <button onclick="saveMeta()" class="btn-save-meta"><i class="fa-solid fa-floppy-disk"></i></button>
+            </div>
+
+            <div id="perfilSection" style="display: none;">
+                <div class="card profile-card">
+                    <h2 class="form-title"><i class="fa-solid fa-user-gear"></i> Configurações do Perfil</h2>
+                    <hr>
+                    <div class="profile-info" style="margin-bottom: 30px;">
+                        <p><strong>Nome:</strong> <span id="perfilNome">---</span></p>
+                        <p><strong>Empresa:</strong> <span id="perfilEmpresa">---</span></p>
+                        <p><strong>E-mail:</strong> <span id="perfilEmail">---</span></p>
                     </div>
-                    <div class="progress-container">
-                        <div class="progress-bar" id="metaProgress" style="width: 0%;"></div>
-                    </div>
+
+                    <h2 class="form-title"><i class="fa-solid fa-thumbtack"></i> Gerenciar Cotas Fixas</h2>
+                    <p class="subtitle">Moldes salvos para repetição automática mensal:</p>
+                    
+                    <div id="listaFixasGerenciamento" class="fixas-list">
+                        </div>
                 </div>
+            </div>
+        </main>
+    </div>
 
-                <div class="export-buttons">
-                    <button onclick="pdf.mensal()"><i class="fa-solid fa-file-pdf"></i> Mensal</button>
-                    <button onclick="pdf.anual()"><i class="fa-solid fa-file-pdf"></i> Anual</button>
-                </div>
-            </header>
-                <section class="summary"> <!--Cards-->
-                    <div class="card"> <!--Card faturamento-->
-                    <div class="card-icon blue"><i class="fa-solid fa-wallet"></i>
-                        </div>
-                    <div>
-                        <p>Faturamento</p>
-                        <h3>R$ <span id="totalEntrada">0.00</span></h3>
-                    </div>
-                        </div>
-                    <div class="card"><!--Card Despesas-->
-                    <div class="card-icon red"><i class="fa-solid fa-hand-holding-dollar"></i></div>
-                    <div>
-                        <p>Despesas</p>
-                        <h3>R$ <span id="totalSaida">0.00</span></h3>
-                    </div>
-                        </div>
-                    <div class="card"> <!--Card Lucro Líquido-->
-                    <div class="card-icon green"><i class="fa-solid fa-chart-pie"></i></div>
-                    <div>
-                        <p>Lucro Líquido</p>
-                        <h3>R$ <span id="lucro">0.00</span></h3>
-                    </div>
-                        </div>
-            </section>
-
-            <div class="grid-layout"> <!--Lançamentos-->
-                <section class="form-section card">
-                <h2 class="form-title">Novo Lançamento</h2>
-                <div class="form-grid">
-
-                <label>Data</label>
-                <input type="date" id="data">
-
-                <label>Cliente</label>
-                <input type="text" id="cliente" placeholder="Origem">
-            
-                <label>Descrição</label>
-                <input type="text" id="descricao" placeholder="O que é?">
-            
-                <label>Valor</label>
-                <input type="number" id="valor" placeholder="0.00">
-            
-                <div class="inline-group">
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Editar Lançamento</h2>
+                <span class="close-btn" onclick="fecharModal()">&times;</span>
+            </div>
+            <div class="form-grid">
+                <label>Data</label><input type="date" id="editData">
+                <label>Cliente/Origem</label><input type="text" id="editCliente">
+                <label>Descrição</label><input type="text" id="editDescricao">
+                <label>Valor</label><input type="number" id="editValor">
                 <label>Tipo</label>
-                <select id="tipo">
+                <select id="editTipo">
                     <option value="entrada">Entrada</option>
                     <option value="saida">Saída</option>
                 </select>
-            </div>
-
-            <label>Pagamento</label>
-            <select id="pagamento">
-                <option value="Pix">Pix</option>
-                <option value="Dinheiro">Dinheiro</option>
-                <option value="Débito">Débito</option>
-                <option value="Crédito">Crédito</option>
-            </select>
-
-            <label>Status</label>
-            <select id="status">
-                <option value="Pago">Pago</option>
-                <option value="A pagar">A pagar</option>
-            </select>
-
-            <label>Ajudante</label>
-            <input type="number" id="ajudante" placeholder="Custo">
-
-            <button onclick="addLancamento()" class="btn-add">Adicionar</button>
-        </div>
-    </section>
-
-    <div class="tables-container">
-        <div class="card table-card"> <!--Tabela de Entrada-->
-            <h2 class="sticky-title">Entradas</h2>
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Data</th>
-                            <th>Cliente</th>
-                            <th>Descrição</th>
-                            <th>Valor</th>
-                            <th>Ajudante</th>
-                            <th>Pgto</th>
-                            <th>Status</th>
-                            <th>Ação</th>
-                        </tr>
-                    </thead>
-                    <tbody id="entradaBody"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="card table-card"> <!--Tabela de Saída-->
-            <h2 class="sticky-title">Saídas</h2>
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Data</th>
-                            <th>Cliente</th>
-                            <th>Descrição</th>
-                            <th>Valor</th>
-                            <th>Ajudante</th>
-                            <th>Pgto</th>
-                            <th>Status</th>
-                            <th>Ação</th>
-                        </tr>
-                    </thead>
-                    <tbody id="saidaBody"></tbody>
-                </table>
+                <label>Pagamento</label>
+                <select id="editPagamento">
+                    <option value="Pix">Pix</option>
+                    <option value="Dinheiro">Dinheiro</option>
+                    <option value="Débito">Débito</option>
+                    <option value="Crédito">Crédito</option>
+                </select>
+                <label>Status</label>
+                <select id="editStatus">
+                    <option value="Pago">Pago</option>
+                    <option value="A pagar">A pagar</option>
+                </select>
+                <label>Ajudante</label><input type="number" id="editAjudante">
+                <button onclick="salvarEdicao()" class="btn-add" style="width: 100%;">Salvar Alterações</button>
             </div>
         </div>
     </div>
-</div>
-<div id="editModal" class="modal"> <!--Modal de Edição-->
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Editar Lançamento</h2>
-            <span class="close-modal" onclick="fecharModal()">&times;</span>
-        </div>
-        
-        <div class="form-grid">
-            <label>Data</label>
-            <input type="date" id="editData">
-            
-            <label>Cliente/Origem</label>
-            <input type="text" id="editCliente">
-            
-            <label>Descrição</label>
-            <input type="text" id="editDescricao">
-            
-            <label>Valor</label>
-            <input type="number" id="editValor">
-            
-            <label>Tipo</label>
-            <select id="editTipo">
-                <option value="entrada">Entrada</option>
-                <option value="saida">Saída</option>
-            </select>
-            
-            <label>Pagamento</label>
-            <select id="editPagamento">
-                <option value="Pix">Pix</option>
-                <option value="Dinheiro">Dinheiro</option>
-                <option value="Débito">Débito</option>
-                <option value="Crédito">Crédito</option>
-            </select>
-            
-            <label>Status</label>
-            <select id="editStatus">
-                <option value="Pago">Pago</option>
-                <option value="A pagar">A pagar</option>
-            </select>
-            
-            <label>Ajudante</label>
-            <input type="number" id="editAjudante">
 
-            <button onclick="salvarEdicao()" class="btn-add" style="width: 100%;">Salvar Alterações</button>
+    <footer>
+        <div class="copyright-bar">
+            <p>&copy; 2026 Negronni Tech - Todos os direitos reservados.</p>
         </div>
-    </div>
-</div>
-<div id="conteudoPrincipal">
-    </div>
+    </footer>
 
-<div id="perfilSection" style="display: none;">
-    </div>
-<footer>
-    <div class="copyright-bar">
-        <p>&copy; 2026 Negronni Tech - Todos os direitos reservados.</p>
-    </div>
-</footer>
-<script type="module" src="script.js"></script>
+    <script type="module" src="script.js"></script>
 </body>
 </html>
