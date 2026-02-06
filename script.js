@@ -20,15 +20,68 @@ window.collection = collection;
 const authSection = document.getElementById("auth");
 const appSection = document.getElementById("app");
 const monthSelect = document.getElementById("monthSelect");
+const btnAbrirModal = document.getElementById('btnRegister');
+const modal = document.getElementById('modalCadastro');
+const btnFechar = document.getElementById('btnFechar');
+const formCadastro = document.getElementById('formCadastroFirebase');
 
 // --- AUTENTICAÇÃO ---
-document.getElementById("btnRegister").addEventListener("click", async () => {
-    const email = document.getElementById("email").value;
-    const pass = document.getElementById("password").value;
+// Agora ele apenas abre a janela de cadastro
+btnAbrirModal.onclick = (e) => {
+    e.preventDefault(); 
+    modal.style.display = 'flex';
+};
+
+// E aproveitamos para incluir o fechamento
+btnFechar.onclick = () => modal.style.display = 'none';
+formCadastro.addEventListener('submit', async (e) => {
+    e.preventDefault(); 
+
+    /// --- LÓGICA DE CADASTRO NO MODAL ---
+formCadastro.addEventListener('submit', async (e) => {
+    e.preventDefault(); 
+
+    // 1. Captura os valores dos inputs do modal
+    const nome = document.getElementById('regNome').value;
+    const empresa = document.getElementById('regEmpresa').value;
+    const telefone = document.getElementById('regTelefone').value;
+    const email = document.getElementById('regEmail').value;
+    const senha = document.getElementById('regSenha').value;
+
     try {
-        await createUserWithEmailAndPassword(auth, email, pass);
-    } catch (e) { alert("Erro ao cadastrar: " + e.message); }
+        // 2. Cria o usuário no Firebase Auth
+        const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
+        const user = userCredential.user;
+
+        // 3. Salva os dados extras no Firestore
+        await setDoc(doc(db, "usuarios", user.uid), {
+            nome: nome,
+            empresa: empresa,
+            telefone: telefone,
+            email: email,
+            dataCadastro: new Date()
+        });
+
+        // --- O PULO DO GATO ---
+        alert("Conta criada com sucesso! 🎉");
+        
+        // 4. Limpa o formulário e fecha o modal
+        formCadastro.reset();
+        modal.style.display = 'none'; // Fecha o modal de cadastro
+        
+        // O onAuthStateChanged (que você já tem no código) 
+        // vai detectar o novo login e mostrar a tela principal automaticamente!
+        
+    } catch (error) {
+        console.error("Erro no cadastro:", error);
+        alert("Erro ao cadastrar: " + error.message);
+    }
 });
+});
+
+window.onclick = (event) => {
+    if (event.target == modal) modal.style.display = 'none';
+};
 
 document.getElementById("btnLogin").addEventListener("click", async () => {
     const email = document.getElementById("email").value;
@@ -525,3 +578,25 @@ window.salvarEdicao = async () => {
         carregarLancamentos(); // Recarrega a lista
     } catch (e) { console.error("Erro ao salvar:", e); }
 };
+// Declarar os elementos
+const btnConfiguracoes = document.getElementById('btnConfiguracoes');
+const conteudoPrincipal = document.getElementById('conteudoPrincipal');
+const perfilSection = document.getElementById('perfilSection');
+
+// Evento de clique na engrenagem
+btnConfiguracoes.onclick = () => {
+    // 1. Esconde a parte das tabelas e entradas
+    conteudoPrincipal.style.display = 'none';
+    
+    // 2. Mostra a tela de perfil
+    perfilSection.style.display = 'block';
+    
+    // 3. Carrega os dados do Firebase para preencher os campos
+    carregarDadosPerfil(); 
+};
+
+// Função para voltar para a tela principal (adicione um botão "Voltar" no perfil)
+function voltarParaPrincipal() {
+    perfilSection.style.display = 'none';
+    conteudoPrincipal.style.display = 'block';
+}

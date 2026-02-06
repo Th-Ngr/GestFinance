@@ -266,3 +266,71 @@ footer {
     font-size: 11px;
     border-top: 2px solid #f2f2f2; /* Uma linhazinha fina para separar do resto */
 }
+#modalCadastro{
+    z-index: 10000; /* Garante que fique acima do fundo escuro */
+}
+/* 1. O Fundo Escuro (Overlay) */
+.modal-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Preto com 50% de transparência */
+    display: none; /* COMEÇA ESCONDIDO */
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Garante que fica por cima de tudo */
+}
+
+/* 2. A Caixa Branca (Igual ao seu card de login) */
+.modal-content {
+    background-color: white;
+    padding: 30px;
+    border-radius: 15px; /* Arredondado igual ao seu print */
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.2);
+    position: relative;
+}
+
+/* 3. Estilizando os Inputs (Seguindo o padrão azulado do print) */
+.modal-content input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border: none;
+    border-radius: 8px;
+    background-color: #eef2f8; /* Aquele tom de azul bem clarinho */
+    box-sizing: border-box; /* Garante que o padding não "estoure" a largura */
+}
+
+/* 4. O Botão de Finalizar (Verde Sólido) */
+.btn-finalizar {
+    width: 100%;
+    padding: 12px;
+    background-color: #20a79b; /* O verde do seu botão 'Entrar' */
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-top: 15px;
+}
+.modal-content {
+    position: relative; /* Já definimos antes, mas é essencial! */
+    /* ... seus outros estilos ... */
+}
+
+.close-btn {
+    position: absolute;
+    top: 10px;    /* Distância do topo */
+    right: 15px;  /* Distância da direita */
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;  /* Uma cor cinza para não berrar tanto */
+}
+
+.close-btn:hover {
+    color: #ff0000; /* Muda para vermelho quando passa o mouse, para dar feedback */
+}

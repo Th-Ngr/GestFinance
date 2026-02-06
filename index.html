@@ -4,13 +4,29 @@
     <meta charset="UTF-8">
     <title>Gest Financial</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/x-icon" href="favicon.png">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
-
+<div id="modalCadastro" class="modal-bg">
+  <div class="modal-content">
+    <span id="btnFechar" class="close-btn">&times;</span>
+    <h2>Novo Cadastro</h2>
+    <hr>
+    
+    <form id="formCadastroFirebase">
+      <input type="text" id="regNome" placeholder="Seu nome" required>
+      <input type="text" id="regEmpresa" placeholder="Nome da empresa" required>
+      <input type="tel" id="regTelefone" placeholder="Telefone (WhatsApp)">
+      <input type="email" id="regEmail" placeholder="E-mail" required>
+      <input type="password" id="regSenha" placeholder="Senha" required>
+      
+      <button type="submit" class="btn-finalizar">Finalizar Cadastro</button>
+    </form>
+  </div>
+</div>
 <div class="main-wrapper">
     <div id="back">     
         <section id="auth" class="auth-card" >
@@ -178,7 +194,6 @@
         </div>
     </div>
 </div>
-
 <div id="editModal" class="modal"> <!--Modal de Edição-->
     <div class="modal-content">
         <div class="modal-header">
@@ -226,7 +241,11 @@
         </div>
     </div>
 </div>
+<div id="conteudoPrincipal">
+    </div>
 
+<div id="perfilSection" style="display: none;">
+    </div>
 <footer>
     <div class="copyright-bar">
         <p>&copy; 2026 Negronni Tech - Todos os direitos reservados.</p>
