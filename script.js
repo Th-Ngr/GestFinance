@@ -479,3 +479,4 @@ window.fecharModal = () => {
     if (modalEdicao) modalEdicao.style.display = "none";
     editId = null;
 };
+// --- FIM DO CÓDIGO ---

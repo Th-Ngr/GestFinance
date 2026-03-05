@@ -54,6 +54,18 @@
                     <i class="fa-solid fa-gear"></i>
                 </li>
             </ul>
+            </ul>
+    
+    <div class="mobile-access" onclick="toggleQRCode()" title="Acessar no Celular">
+        <i class="fa-solid fa-mobile-screen-button"></i>
+        <div id="qrContainer" class="qr-popup">
+            <p>Acesse no Celular</p>
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://th-ngr.github.io/Gestto-mobile/" alt="QR Code">
+            <span>Aponte a câmera</span>
+        </div>
+    </div>
+
+    <button id="btnLogoutTop" onclick="logout()" class="logout-btn">
             <button id="btnLogoutTop" onclick="logout()" class="logout-btn">
                 <i class="fa-solid fa-right-from-bracket"></i>
             </button>
